@@ -1,0 +1,128 @@
+@using EHUB.Utilities
+@using EHUB.Models.Administration
+@model List<WorkLocationRow>
+
+@{
+	ViewData["Title"] = "Locations";
+	ViewData["pgHeader"] = "Add/Modify Locations";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+	.btnsh { opacity: 0; }
+	tr:hover .btnsh { opacity: 1; }
+</style>
+
+<section class="content">
+	@if (TempData["msg"] != null)
+	{
+		<div class="alert alert-warning">@TempData["msg"]</div>
+	}
+	@if (chk == "f")
+	{
+		<div class="col-md-6" style="margin-bottom: 10px;">
+			<a id="btnAdd" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Location</a>
+		</div>
+	}
+	<div class="card">
+		<div class="card-body">
+			<table id="tbLoc" class="table table-hover table-striped table-sm">
+				<thead>
+					<tr>
+						<th>Location</th>
+						<th>City</th>
+						<th>Address</th>
+						<th>Phone</th>
+						<th>Status</th>
+						<th>Staff</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var item in Model)
+					{
+						<tr>
+							<td>@item.LocationName</td>
+							<td>@item.City</td>
+							<td>@item.Address</td>
+							<td>@item.Phone</td>
+							<td>@(item.IsActive ? "Active" : "Inactive")</td>
+							<td>@item.StaffCount</td>
+							<td style="white-space:nowrap">
+								<span class="btnsh">
+									@if (chk == "f")
+									{
+										<a class="btn btn-outline-danger btn-xs btn-edit"
+										   data-id="@item.LocationId" data-name="@item.LocationName" data-city="@item.City"
+										   data-address="@item.Address" data-phone="@item.Phone" data-active="@(item.IsActive ? 1 : 0)"><i class="fa-solid fa-pen"></i> Edit</a>
+										<form method="post" asp-controller="Administration" asp-action="DeleteWorkLocation" style="display:inline"
+											  onsubmit="return confirm('Delete location @item.LocationName?');">
+											<input type="hidden" name="id" value="@item.LocationId" />
+											<button type="submit" class="btn btn-outline-secondary btn-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+										</form>
+									}
+								</span>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</section>
+<div class="modal fade" id="dgAdd" style="display: none;">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add/Modify Location</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			</div>
+			<form id="frmAdd" method="post" asp-controller="Administration" asp-action="WorkLocations">
+				<div class="modal-body">
+					<input type="hidden" value="0" name="LocationId" />
+					<div class="form-group">
+						<label>Location <span class="text-danger">*</span></label>
+						<input type="text" class="form-control" name="LocationName" required maxlength="150" />
+					</div>
+					<div class="form-group">
+						<label>City</label>
+						<input type="text" class="form-control" name="City" maxlength="100" />
+					</div>
+					<div class="form-group">
+						<label>Address</label>
+						<input type="text" class="form-control" name="Address" maxlength="300" />
+					</div>
+					<div class="form-group">
+						<label>Phone</label>
+						<input type="text" class="form-control" name="Phone" maxlength="50" />
+					</div>
+					<div class="form-group">
+						<label>Status</label>
+						<select name="IsActive" class="form-control">
+							<option value="true">Active</option>
+							<option value="false">Inactive</option>
+						</select>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	function fill(d) {
+		var f = $('#frmAdd');
+		f.find('[name=LocationId]').val(d.id || 0);
+		f.find('[name=LocationName]').val(d.name || '');
+		f.find('[name=City]').val(d.city || '');
+		f.find('[name=Address]').val(d.address || '');
+		f.find('[name=Phone]').val(d.phone || '');
+		f.find('[name=IsActive]').val(d.active === 0 ? 'false' : 'true');
+		$('#dgAdd').modal("show");
+	}
+	$('#btnAdd').on('click', function () { fill({}); });
+	$('.btn-edit').on('click', function () { fill($(this).data()); });
+</script>

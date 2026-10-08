@@ -40,6 +40,13 @@ namespace EHUB.Controllers.Dashboard
             _dContext = dContext;
             _httpContextAccessor = httpContextAccessor;
         }
+        [HttpPost]
+        public IActionResult SwitchLocation([FromServices] LocationScope locScope, int locationId, string? returnUrl)
+        {
+            locScope.TrySelect(locationId);
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) return LocalRedirect(returnUrl);
+            return RedirectToAction("Index", "Home");
+        }
         public async Task<IActionResult> Index()
         {
             var uinfo = User.Claims.ToArray();

@@ -116,6 +116,15 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="col-md-12">
+                                    	<label for="">Locations <small class="text-muted">(staff can work at more than one)</small></label>
+                                    	<select name="LocationIds" id="cboLocs" multiple="multiple" class="form-control select2" style="width:100%" data-placeholder="Select locations">
+                                    		@foreach (var item in Model.workLocations ?? new List<EHUB.Models.Administration.WorkLocation>())
+                                    		{
+                                    			<option value="@item.LocationId" selected="@((Model.empLocationIds ?? new List<int>()).Contains(item.LocationId))">@item.LocationName</option>
+                                    		}
+                                    	</select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-2">

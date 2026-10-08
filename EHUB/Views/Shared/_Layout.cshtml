@@ -2,6 +2,7 @@
 @using EHUB.Utilities
 @inject IHttpContextAccessor Accessor
 @inject Menu _menu
+@inject LocationScope _locScope
 @{
 	var uinfo = User.Claims.ToArray();
 	var gId = uinfo[3].Value;
@@ -172,6 +173,26 @@
 				</span>
 			</ul>
 			<ul class="navbar-nav ml-auto">
+				@if (_locScope.CanSwitch)
+				{
+					<li class="nav-item">
+						<form method="post" asp-controller="Home" asp-action="SwitchLocation" class="form-inline" style="padding:3px 8px;">
+							<input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+							<i class="fa-solid fa-location-dot mr-1 text-muted"></i>
+							<select name="locationId" class="form-control form-control-sm" onchange="this.form.submit()" title="Location">
+								<option value="0" selected="@(_locScope.Active == 0)">All Locations (consolidated)</option>
+								@foreach (var l in _locScope.Allowed)
+								{
+									<option value="@l.LocationId" selected="@(_locScope.Active == l.LocationId)">@l.LocationName</option>
+								}
+							</select>
+						</form>
+					</li>
+				}
+				else if (_locScope.Allowed.Count == 1)
+				{
+					<li class="nav-item"><span class="nav-link text-muted"><i class="fa-solid fa-location-dot mr-1"></i>@_locScope.ActiveName</span></li>
+				}
 				<li class="nav-item dropdown">
 					<a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
 						<i class="far fa-bell"></i>

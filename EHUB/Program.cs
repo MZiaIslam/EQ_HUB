@@ -28,6 +28,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<Menu>();
 builder.Services.AddScoped<GM>();
+builder.Services.AddScoped<LocationScope>();
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory + @"Keys")) // persist keys so cookies survive app restarts
     .SetApplicationName("EHUB");
