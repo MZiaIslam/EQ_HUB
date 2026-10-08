@@ -25,12 +25,50 @@ namespace EHUB.Controllers.HRManagement
 		private readonly DataContext _dContext;
 		private readonly IWebHostEnvironment _wHostEnv;
 		private readonly GM _gm;
+		private readonly LocationScope _locScope;
 		GM gM = new GM();
-		public HRController(DataContext dContext, IWebHostEnvironment wHostEnv, GM gm)
+		public HRController(DataContext dContext, IWebHostEnvironment wHostEnv, GM gm, LocationScope locScope)
 		{
+			_locScope = locScope;
 			_dContext = dContext;
 			_wHostEnv = wHostEnv;
 			_gm = gm;
+		}
+		/// <summary>
+		/// Replaces the staff member's location assignments within the set the signed-in user manages
+		/// (all active locations for administrators, otherwise their own locations).
+		/// </summary>
+		private void SaveEmpLocations(int empId, int[]? selected)
+		{
+			if (empId <= 0 || Request.Method != "POST") return;
+			var managed = _locScope.Allowed.Select(l => l.LocationId).ToList();
+			if (managed.Count == 0) return;
+			var keep = (selected ?? Array.Empty<int>()).Where(managed.Contains).Distinct().ToList();
+			var uid = User.Claims.ToArray()[2].Value;
+			var managedCsv = string.Join(",", managed);
+			_dContext.Database.ExecuteSqlRaw(
+				"DELETE FROM tblEmpWorkLocations WHERE EmpID = @e AND LocationId IN (" + managedCsv + ")" +
+				(keep.Count > 0 ? " AND LocationId NOT IN (" + string.Join(",", keep) + ")" : ""),
+				new SqlParameter("@e", empId));
+			foreach (var locId in keep)
+			{
+				_dContext.Database.ExecuteSqlRaw(
+					"IF NOT EXISTS (SELECT 1 FROM tblEmpWorkLocations WHERE EmpID = @e AND LocationId = @l) INSERT INTO tblEmpWorkLocations (EmpID, LocationId, CreatedBy) VALUES (@e, @l, @u)",
+					new SqlParameter("@e", empId), new SqlParameter("@l", locId), new SqlParameter("@u", uid));
+			}
+		}
+		private void FillLocationLibrary(EmpLibrary lib, int empId)
+		{
+			lib.workLocations = _locScope.Allowed;
+			try
+			{
+				lib.empLocationIds = _dContext.Database.SqlQueryRaw<int>(
+					"SELECT LocationId AS [Value] FROM tblEmpWorkLocations WHERE EmpID = @e", new SqlParameter("@e", empId)).ToList();
+			}
+			catch
+			{
+				lib.empLocationIds = new List<int>();
+			}
 		}
 		[AuthWrite]
 		public ActionResult StaffDataReport()
@@ -40,7 +78,7 @@ namespace EHUB.Controllers.HRManagement
 		[HttpPost]
 		public IActionResult StaffRecord(Fillterdata fillterdata)
 		{
-			var _emps = _dContext.Database.SqlQuery<StaffData>($"usp_StaffRecord").AsEnumerable().Select(p => new SelectListItem
+			var _emps = _locScope.FilterStaff(_dContext.Database.SqlQuery<StaffData>($"usp_StaffRecord").AsEnumerable()).Select(p => new SelectListItem
 			{
 				Value = p.empid.ToString(),
 				Text = p.empcode.ToString() + " " + p.empname,
@@ -49,7 +87,7 @@ namespace EHUB.Controllers.HRManagement
 			var _staffdata = new List<StaffData>();
 			if (ModelState.IsValid)
 			{
-				_staffdata = _dContext.Database.SqlQuery<StaffData>($"usp_StaffRecord").ToList();
+				_staffdata = _locScope.FilterStaff(_dContext.Database.SqlQuery<StaffData>($"usp_StaffRecord").ToList());
 			}
 			_staffdata = _staffdata.Where(x => x.empstatus.ToString() == fillterdata.empstat).ToList();
 			if (fillterdata.emp != "0")
@@ -69,7 +107,7 @@ namespace EHUB.Controllers.HRManagement
 		[AuthWrite]
 		public IActionResult StaffRecord()
 		{
-			var _emps = _dContext.Database.SqlQuery<StaffData>($"usp_StaffRecord").AsEnumerable().Select(p => new SelectListItem
+			var _emps = _locScope.FilterStaff(_dContext.Database.SqlQuery<StaffData>($"usp_StaffRecord").AsEnumerable()).Select(p => new SelectListItem
 			{
 				Value = p.empid.ToString(),
 				Text = p.empcode.ToString() + " " + p.empname
@@ -120,6 +158,7 @@ namespace EHUB.Controllers.HRManagement
 		).ToListAsync();
 					EmpID = em[0].EmpID;
 					emp.EmpID = EmpID;
+					SaveEmpLocations(Convert.ToInt32(EmpID), emp.LocationIds);
 					if (emp.photo != null)
 					{
 						var path = Path.Combine(_wHostEnv.WebRootPath + "/dist/img/StaffData/pics/" + EmpID + ".png");
@@ -172,6 +211,7 @@ namespace EHUB.Controllers.HRManagement
 			empLibrary.usergroups = _UserGroups;
 			_Locations = _dContext.Database.SqlQuery<Locations>($"SELECT * FROM tblLocations order by Loc").ToList();
 			empLibrary.loc = _Locations.Where(x => x.LocType == 2).ToList();
+			FillLocationLibrary(empLibrary, Convert.ToInt32(EmpID));
 			_StaffEdu = _dContext.Database.SqlQueryRaw<StaffEdu>($"SELECT Id,Qualification, Institute, Description,EmpID FROM tblAcademicInfo where EmpID=@EmpID AND isDel=0",
 				new SqlParameter("@EmpID", EmpID)).ToList();
 			empLibrary.staffedus = _StaffEdu.ToList();
@@ -334,6 +374,7 @@ namespace EHUB.Controllers.HRManagement
 		).ToListAsync();
 					EmpID = em[0].EmpID;
 					emp.EmpID = EmpID;
+					SaveEmpLocations(Convert.ToInt32(EmpID), emp.LocationIds);
 					if (emp.photo != null)
 					{
 						var path = Path.Combine(_wHostEnv.WebRootPath + "/dist/img/StaffData/pics/" + EmpID + ".png");
@@ -387,6 +428,7 @@ namespace EHUB.Controllers.HRManagement
 			empLibrary.usergroups = _UserGroups;
 			_Locations = _dContext.Database.SqlQuery<Locations>($"SELECT * FROM tblLocations order by Loc").ToList();
 			empLibrary.loc = _Locations.Where(x => x.LocType == 2).ToList();
+			FillLocationLibrary(empLibrary, Convert.ToInt32(EmpID));
 			_StaffEdu = _dContext.Database.SqlQueryRaw<StaffEdu>($"SELECT Id,Qualification, Institute, Description,EmpID FROM tblAcademicInfo where EmpID=@EmpID AND isDel=0",
 				new SqlParameter("@EmpID", EmpID)).ToList();
 			empLibrary.staffedus = _StaffEdu.ToList();

@@ -131,6 +131,73 @@ namespace EHUB.Controllers.Administration
 			//}
 			return RedirectToAction("Locations", "Administration");
 		}
+		[AuthWrite]
+		public ActionResult WorkLocations()
+		{
+			var locs = _dContext.Database.SqlQueryRaw<WorkLocationRow>(
+				@"SELECT L.LocationId, L.LocationName, L.Address, L.City, L.Phone, L.IsActive,
+					(SELECT COUNT(1) FROM tblEmpWorkLocations E WHERE E.LocationId = L.LocationId) AS StaffCount
+				FROM tblWorkLocations L WHERE L.IsDel = 0 ORDER BY L.LocationName").ToList();
+			return View(locs);
+		}
+		private bool CanEditWorkLocations()
+		{
+			var group = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.GroupSid)?.Value;
+			return group != null && gM.pageaccess("WorkLocations", group) == "f";
+		}
+		[HttpPost]
+		public ActionResult WorkLocations(WorkLocation loc)
+		{
+			if (!CanEditWorkLocations()) return RedirectToAction("Index", "Home");
+			if (string.IsNullOrWhiteSpace(loc.LocationName))
+			{
+				TempData["msg"] = "Location name is required.";
+				return RedirectToAction("WorkLocations", "Administration");
+			}
+			var uid = User.Claims.ToArray()[2].Value;
+			var name = loc.LocationName.Trim();
+			var dup = _dContext.Database.SqlQueryRaw<int>(
+				"SELECT COUNT(1) AS [Value] FROM tblWorkLocations WHERE IsDel = 0 AND LocationName = @n AND LocationId <> @id",
+				new SqlParameter("@n", name), new SqlParameter("@id", loc.LocationId)).ToList()[0];
+			if (dup > 0)
+			{
+				TempData["msg"] = "A location named \"" + name + "\" already exists.";
+				return RedirectToAction("WorkLocations", "Administration");
+			}
+			if (loc.LocationId == 0)
+			{
+				_dContext.Database.ExecuteSqlRaw(
+					"INSERT INTO tblWorkLocations (LocationName, Address, City, Phone, IsActive, CreatedBy) VALUES (@n, @a, @c, @p, @act, @u)",
+					new SqlParameter("@n", name), new SqlParameter("@a", (object?)loc.Address ?? DBNull.Value),
+					new SqlParameter("@c", (object?)loc.City ?? DBNull.Value), new SqlParameter("@p", (object?)loc.Phone ?? DBNull.Value),
+					new SqlParameter("@act", loc.IsActive), new SqlParameter("@u", uid));
+			}
+			else
+			{
+				_dContext.Database.ExecuteSqlRaw(
+					"UPDATE tblWorkLocations SET LocationName = @n, Address = @a, City = @c, Phone = @p, IsActive = @act, ModifyBy = @u, ModifyOn = GETDATE() WHERE LocationId = @id AND IsDel = 0",
+					new SqlParameter("@n", name), new SqlParameter("@a", (object?)loc.Address ?? DBNull.Value),
+					new SqlParameter("@c", (object?)loc.City ?? DBNull.Value), new SqlParameter("@p", (object?)loc.Phone ?? DBNull.Value),
+					new SqlParameter("@act", loc.IsActive), new SqlParameter("@u", uid), new SqlParameter("@id", loc.LocationId));
+			}
+			return RedirectToAction("WorkLocations", "Administration");
+		}
+		[HttpPost]
+		public ActionResult DeleteWorkLocation(int id)
+		{
+			if (!CanEditWorkLocations()) return RedirectToAction("Index", "Home");
+			var assigned = _dContext.Database.SqlQueryRaw<int>(
+				"SELECT COUNT(1) AS [Value] FROM tblEmpWorkLocations WHERE LocationId = @id", new SqlParameter("@id", id)).ToList()[0];
+			if (assigned > 0)
+			{
+				TempData["msg"] = "This location is assigned to " + assigned + " staff member(s). Remove it from their profiles first, or mark it inactive.";
+				return RedirectToAction("WorkLocations", "Administration");
+			}
+			_dContext.Database.ExecuteSqlRaw(
+				"UPDATE tblWorkLocations SET IsDel = 1, ModifyBy = @u, ModifyOn = GETDATE() WHERE LocationId = @id",
+				new SqlParameter("@u", User.Claims.ToArray()[2].Value), new SqlParameter("@id", id));
+			return RedirectToAction("WorkLocations", "Administration");
+		}
 		public ActionResult SystemLibrary()
 		{
 			return View();

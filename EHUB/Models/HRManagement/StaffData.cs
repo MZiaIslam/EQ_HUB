@@ -123,6 +123,8 @@ namespace EHUB.Models.HRManagement
         public List<JobStatus>? jobstatus { get; set; }
         public List<UserGroups>? usergroups { get; set; }
         public List<Locations>? loc { get; set; }
+        public List<EHUB.Models.Administration.WorkLocation>? workLocations { get; set; }
+        public List<int>? empLocationIds { get; set; }
         public List<StaffData>? linemgr { get; set; }
         public List<EmpEditLog>? empEditLog { get; set; }
         public List<StaffEdu>? staffedus { get; set; } 

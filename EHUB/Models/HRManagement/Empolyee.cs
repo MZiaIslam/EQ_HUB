@@ -103,6 +103,8 @@ public string? Gender { get; set; }
         public string? remarks { get; set; } = "";
 public int? EmpStatus { get; set; } = 0;
         [NotMapped]
+        public int[]? LocationIds { get; set; }
+        [NotMapped]
         public IFormFile? photo { set; get; } = null;
     }
     public class EmpIds
