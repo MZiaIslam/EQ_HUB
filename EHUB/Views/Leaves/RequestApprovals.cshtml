@@ -1,0 +1,276 @@
+﻿@using EHUB.Utilities
+@using Newtonsoft.Json.Linq
+@using System.Text
+@{
+    ViewData["Title"] = "Leave Request Approvals";
+    ViewData["pgHeader"] = "Pending Approvals";
+    var chk = new AuthRights().chk();
+}
+<style>
+    .btnsh {
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+    .ft16 {
+        font-size: 14px;
+    }
+</style>
+<section class="content">
+    <div class="card card-default">
+        <div class="card-header">
+            <h3 class="card-title">Parameters</h3>
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body" style="display:block;padding-top:0">
+            <form asp-controller="Leaves" asp-action="RequestApprovals" enctype="multipart/form-data" method="post" id="frmSearch">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>Station</label>
+                        <select class="form-control" asp-items="Model.stations" name="station">
+                            <option value="0">ANY</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Sub Department</label>
+                        <select class="form-control" asp-items="Model.subdepart" name="subdepart">
+                            <option value="0">ANY</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Job Status</label>
+                        <select class="form-control" asp-items="Model.jobstat" name="jobstat">
+                            <option value="0">ANY</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Employee</label>
+                        <select class="form-control select2" asp-items="Model.emps" name="emp">
+                            <option value="0">ANY</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Leave Date</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                    <input type="checkbox" onclick="toggleDT()" id="chkdt" name="chkdt">
+                                </span>
+                            </div>
+                            <input type="date" value="@(Model.fills?.fromdate?.ToString("yyyy-MM-dd"))" id="fromdate" class="form-control" disabled name="fromdate">
+                            <input type="date" value="@(Model.fills?.todate?.ToString("yyyy-MM-dd"))" id="todate" class="form-control" disabled name="todate">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Leave Status</label>
+                        <select name="LeaveStatus" id="LeaveStatus" class="form-control">
+                            <option value="To Approve">To Approve</option>
+                            <option value="In Process">In Process</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Refused">Refused</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label>Leave Type</label>
+                        <select name="LeaveType" id="LeaveType" class="form-control" asp-items="Model.leavetypes">
+                            <option value="0">ALL</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-12" style="padding:5px 1px">
+                    <button type="submit" id="btnShRpt" class="btn btn-primary btn-sm">
+                        <i class="fa fa-magnifying-glass"></i> Search Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12 proall" style="padding:5px 1px;display:none">
+                    <button type="button" id="btnProcessALL" class="btn btn-primary btn-sm float-right">
+                        <i class="fa fa-cogs"></i> Process All
+                    </button>
+                </div>
+                <div class="col-md-12">
+                    <table class="table table-striped table-hover" id="tbleaves">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="checkAll"></th>
+                                <th>Request Date</th>
+                                <th>Staff</th>
+                                <th>Line Manager</th>
+                                <th>Leave Type</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Leave Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.leaves)
+                            {
+                                <tr>
+                                    <td><input type="checkbox" class="checkItem" vid="@item.id"></td>
+                                    <td>@item.Created.ToString("dd MMM yyyy")</td>
+                                    <td>@item.eName</td>
+                                    <td>@item.Mgr</td>
+                                    <td>@item.Leave</td>
+                                    <td>@item.dtFrom.ToString("dd MMM yyyy") - @item.dtTo.ToString("dd MMM yyyy")</td>
+                                    <td>@item.lvduration</td>
+                                    @{
+                                        var lst = new StringBuilder();
+                                        if (item.aprvstat != null)
+                                        {
+                                            JArray jsonArray = JArray.Parse(item.aprvstat);
+                                            foreach (var itm in jsonArray)
+                                            {
+                                                string emp = itm["emp"]?.ToString() ?? "N/A";
+                                                string dt = itm["dtAD"]?.ToString() ?? "N/A";
+                                                string stat = itm["stat"]?.ToString() ?? "N/A";
+                                                string rmk = itm["remarks"]?.ToString() ?? "N/A";
+                                                lst.AppendLine($"{emp} {dt} {stat} {rmk}");
+                                            }
+                                        }
+                                    }
+                                    <td title="@lst">
+                                        @{
+                                            var badgeClass = item.aprvstatus switch
+                                            {
+                                                "To Approve" => "bg-primary",
+                                                "Approved" => "bg-success",
+                                                "Refused" => "bg-danger",
+                                                "In Process" => "bg-warning",
+                                                _ => ""
+                                            };
+                                        }
+                                        <span class="badge @badgeClass ft16">@item.aprvstatus</span>
+                                    </td>
+                                    <td>
+                                        @if (item.attachment != null)
+                                        {
+                                            <a href="~/dist/img/StaffData/leaves/@item.id/@item.attachment" target="_blank">
+                                                <i class="fa-solid fa-paperclip"></i>
+                                            </a>
+                                        }
+                                        @item.Ldesc
+                                        <span class="btnsh float-right">
+                                            @if (item.aprvstatus == "In Process" || item.aprvstatus == "To Approve" || chk == "f")
+                                            {
+                                                <a class="btn btn-outline-danger btn-xs" onclick="openpopup(@item.id)">Process It</a>
+                                            }
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="dgAprov">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Approve/Approve Request</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmDeactivate" method="post" asp-controller="HR" asp-action="Deactivate">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <input type="hidden" id="aID" name="Id" />
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label>Remarks</label>
+                                <textarea name="rmks" id="rmks" class="form-control frm" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-outline-danger" onclick="Refuse()">
+                        <i class="fa-solid fa-times"></i> Refuse
+                    </a>
+                    <a class="btn btn-outline-success" onclick="Approve()">
+                        <i class="fa-solid fa-thumbs-up fa-beat"></i> Approve
+                    </a>
+                    <a class="btn btn-outline-primary" data-dismiss="modal">Close</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    const toggleDT = () => {
+        const checked = $('#chkdt').prop("checked");
+        $('#fromdate, #todate').prop({
+            'disabled': !checked,
+            'required': checked
+        });
+    }
+    const processRequest = (action, id) => {
+        if (!$("#rmks").val()) {
+            Swal.fire({text: "Please enter remarks..."});
+            return;
+        }
+        const processItem = id => {
+            $.get(`/Leaves/${action}?id=${id}&remarks=${$("#rmks").val()}`);
+        }
+        if (id == 0) {
+            $('.checkItem:checked').each(function() {
+                processItem($(this).attr("vid"));
+            });
+        } else {
+            processItem(id);
+        }
+        location.href = '/Leaves/RequestApprovals';
+    }
+    const openpopup = id => {
+        $("#aID").val(id);
+        $('.frm').val('');
+        $('#dgAprov').modal("show");
+    }
+    const Approve = () => processRequest('Approve', $("#aID").val());
+    const Refuse = () => processRequest('Refuse', $("#aID").val());
+    $(document).ready(() => {
+        $('#checkAll').change(function() {
+            const checked = $(this).prop('checked');
+            $('.checkItem').prop('checked', checked);
+            $(".proall").toggle(checked);
+        });
+        $('.checkItem').change(function() {
+            const checkedCount = $('.checkItem:checked').length;
+            $(".proall").toggle(checkedCount > 1);
+            $('#checkAll').prop('checked', checkedCount === $('.checkItem').length);
+        });
+        $("#tbleaves").DataTable({
+            ordering: true,
+            responsive: true
+        });
+        $("#LeaveStatus").val("@(Model.fills?.LeaveStatus ?? "To Approve")");
+        if ("@Model.fills?.jobstat" !== "") {
+            $('.prmhdr').trigger("click");
+        }
+        if ("@Model.fills?.chkdt" === "on") {
+            $('#chkdt').trigger("click");
+        }
+    });
+    $('#btnProcessALL').on('click', () => {
+        $('.frm').val('');
+        $("#aID").val(0);
+        $('#dgAprov').modal("show");
+    });
+    history.pushState(null, "", location.href);
+    window.onpopstate = () => location.reload();
+</script>

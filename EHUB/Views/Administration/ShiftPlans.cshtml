@@ -1,0 +1,173 @@
+﻿@using EHUB.Utilities
+@using System.Data
+@using Newtonsoft.Json
+
+@{
+	ViewData["Title"] = "Shift Plans";
+	ViewData["pgHeader"] = "Add/Modify Shift Plans";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+	.btnsh {
+		opacity: 0;
+	}
+
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+</style>
+
+<section class="content">
+	@if (chk != "r" || chk != "")
+	{
+		<div class="col-md-6" style="margin-bottom: 10px;">
+			<a id="btnAdd" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Shift Plan</a>
+		</div>
+	}
+	<div class="card">
+
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-12">
+					<table id="tbDepart" class="table table-hover table-striped table-sm">
+						<thead>
+							<tr>
+								<th rowspan="2">Shift Title</th>
+								<th rowspan="2">In Time</th>
+								
+								<th rowspan="2">Out Time</th>
+
+                                <th colspan="4">Time Flag Settings</th>
+							
+
+							</tr>
+							<tr>
+								
+
+								<th>Late</th>
+								<th>Early</th>
+								<th>Shortday</th>
+								<th>Halfday</th>
+
+							</tr>
+						</thead>
+						<tbody id="tblDprt">
+							 @foreach (DataRow item in Model)
+							{
+								<tr>
+									<td>@item["shiftName"]</td>
+									<td>@item["InTime"]</td>
+									<td>
+										@item["OutTime"]
+									</td>
+									<td>
+										@item["late"]
+									</td>
+									<td>
+										@item["early"]
+									</td>
+									<td>
+										@item["shortday"]
+									</td>
+									<td>
+										@item["halfday"]
+								
+										<span class="btnsh">
+
+											@if (chk == "f")
+											{
+												<a onclick="Edit('@(item["jdata"])')" class="btn btn-outline-danger btn-xs float-right"><i class="fa-solid fa-pen"></i> Edit</a>
+											}
+
+										</span>
+									</td>
+								</tr>
+							}
+						</tbody>
+
+					</table>
+				</div></div></div></div>
+	</section>
+<div class="modal fade" id="dgAdd" style="display: none;">
+	<div class="modal-dialog modal-md">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add/Modify Shift Plan</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<form id="frmAdd" class="" method="post" asp-controller="Administration" asp-action="ShiftPlan" enctype="multipart/form-data">
+				<div class="modal-body table-responsive">
+					<div class="row">
+
+
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-12">
+									<input type="hidden" value="0" id="shiftId" name="shiftId" class="frm" />
+									<label>Plan Title</label>
+									<input type="text" class="form-control frm" name="shiftName" required />
+								</div>
+
+								<div class="col-md-6">
+									<label for="">In Time</label>
+									<input type="time" class="form-control frm" name="InTime" required />
+								</div>
+								<div class="col-md-6">
+									<label for="">Out Time</label>
+									<input type="time" class="form-control frm" name="OutTime" required />
+								</div>
+								<div class="col-md-12"><hr/><label>Time Flag Settings</label></div>
+								
+								<div class="col-md-3">
+									<label for="">Late <sub>(min)</sub> </label>
+									<input type="number" class="form-control frm" name="late" />
+								</div>
+								<div class="col-md-3">
+									<label for="">Early <sub>(min)</sub> </label>
+									<input type="number" class="form-control frm" name="early" />
+								</div>
+								<div class="col-md-3">
+									<label for="">Shortday <sub>(hrs)</sub> </label>
+									<input type="number" class="form-control frm" name="shortday" />
+								</div>
+								<div class="col-md-3">
+									<label for="">Halfday <sub>(hrs)</sub> </label>
+									<input type="number" class="form-control frm" name="halfday" />
+								</div>
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#btnAdd').on('click', function () {
+		$('.frm').val('');
+		$('#dgAdd').modal("show");
+	});
+	function Edit(jdata) {
+		let plan = JSON.parse(jdata)[0];
+		$('.frm').val('');
+		$('[name=shiftName]').val(plan.shiftName);
+		$('[name=shiftId]').val(plan.shiftId);
+		$('[name=InTime]').val(plan.InTime);
+		$('[name=OutTime]').val(plan.OutTime);
+		$('[name=late]').val(plan.late);
+		$('[name=early]').val(plan.early);
+		$('[name=shortday]').val(plan.shortday);
+		$('[name=halfday]').val(plan.halfday);
+
+		$('#dgAdd').modal("show");
+	}
+</script>

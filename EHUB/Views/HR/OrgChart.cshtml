@@ -1,0 +1,81 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Organizational Structure";
+}
+<style>
+    #tree {
+        width: 100%;
+        height: 100%;
+    }
+
+    hr {
+        margin: 4px;
+    }
+
+    .boc-search {
+        top: -3px !important;
+    }
+
+    .boc-input > label {
+        display: none !important;
+    }
+
+    .boc-input > input {
+        height: 26px !important;
+        padding: 0 !important;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <select id="selectTemplate" style="position: absolute;z-index:2;">
+                <option>isla</option>
+                <option>olivia</option>
+                <option>diva</option>
+                <option>mila</option>
+                <option>polina</option>
+                <option>mery</option>
+                <option>rony</option>
+                <option>belinda</option>
+                <option>ula</option>
+                <option>ana</option>
+                <option>deborah</option>
+            </select>
+            <div id="tree"></div>
+        </div>
+    </div>
+</section>
+<script src="~/plugins/kendoui/orgchart.js"></script>
+@* <script src="https://balkan.app/js/OrgChart.js"></script> *@
+<script>
+      //JavaScript
+      let crts = @Html.Raw(Json.Serialize(Model));
+    // console.log(crts);
+      let chart = new OrgChart(document.getElementById("tree"), {
+          template: 'isla',
+          mouseScrool: OrgChart.none,
+          layout: OrgChart.mixed,
+          // mouseScrool: OrgChart.action.ctrlZoom,
+          // scaleInitial: OrgChart.match.boundary,
+          enableSearch: true,
+          editForm: null,
+          menu: {
+              pdf: { text: "Export PDF" }
+          },
+          nodeMenu: {
+              pdf: { text: "Export PDF" }
+          },
+          collapse: { level: 1, allChildren: true },
+          align: OrgChart.align.orientation,
+          nodeBinding: {
+              img_0: "img",
+              field_0: "name",
+              field_1: "title"
+          }
+      });
+      chart.load(crts);
+      document.getElementById("selectTemplate").addEventListener("change", function () {
+          chart.config.template = this.value;
+              chart.draw();
+      });
+</script>

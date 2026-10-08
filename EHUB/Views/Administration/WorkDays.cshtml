@@ -1,0 +1,333 @@
+﻿@using EHUB.Utilities
+
+@{
+	ViewData["Title"] = "Work Day ON/OFF";
+	ViewData["pgHeader"] = "Work Day ON/OFF Settings";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+	.ft16 {
+		font-size: 14px;
+	}
+
+	.rd-opt {
+		float: left;
+		padding-right: 12px;
+	}
+
+	.select2-container--default .select2-results__group {
+		cursor: default;
+		display: block;
+		padding: 6px;
+		background: #e5e5e5;
+		color: #2a327d;
+	}
+
+	.btnsh {
+		opacity: 0;
+	}
+
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+
+	#tbEmps_filter input{
+
+	}
+
+	#tbEmps_wrapper > div:nth-child(1) {
+		max-width:0 !important;
+	}
+</style>
+<section class="content">
+	@if (chk != "r" || chk != "")
+	{
+		<div class="col-md-6" style="margin-bottom: 10px;">
+			<a id="btnNewWorkDays" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Set Work Day</a>
+		</div>
+	}
+	<div class="card">
+
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-4">
+			
+					<table id="tbEmps" class="table table-striped table-sm table-hover dataTable no-footer dtr-inline">
+						<thead>
+							<tr>
+								<th>Staff Code - Name</th>
+								
+
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var item in Model.staff)
+							{
+								<tr onclick="WorkDaysLine(@item.empcode);"> <td style="cursor: pointer;">@item.empcode - @item.empname</td></tr>
+							}
+						</tbody>
+
+					</table>
+				</div>
+				<div class="col-md-8">
+
+					<table id="tbWorkDays" class="table table-striped table-md table-hover dataTable no-footer dtr-inline">
+								<thead>
+									<tr>
+										<th>Date From</th>
+										<th>Date To</th>
+										<th>Day State</th>
+								<th>Description</th>
+										<th width="50%">Created By</th>
+							
+									</tr>
+								</thead>
+						<tbody id="tblWorkDays"></tbody>
+
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<div class="modal fade" id="dgWorkDays" style="display: none;">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Set Day ON/OFF</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<form id="frmWorkDays" class="" method="post" asp-controller="Administration" asp-action="WorkDays" enctype="multipart/form-data">
+				<div class="modal-body table-responsive">
+					<div class="row">
+
+
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-sm-12">
+							
+									<div class="form-group clearfix">
+										<input type="hidden" id="Mode" name="mode" value="1" />
+										<div class="icheck-orange d-inline rd-opt">
+											<input type="radio" id="optDepart" name="optD" value="1" checked class="optMode">
+											<label for="optDepart">
+												By Department
+											</label>
+										</div>
+										<div class="icheck-orange d-inline rd-opt">
+											<input type="radio" id="optEmp" name="optD" value="2" class="optMode">
+											<label for="optEmp">
+												By Employees
+											</label>
+										</div>
+										
+									</div>
+								</div>
+					
+								<div class="col-md-12 staff" style="display: none;">
+									<label for="">Staff</label>
+									<select name="EmpIds[]" id="staffid" class="form-control select2" multiple="multiple" style="width:100%">
+										@foreach (var item in Model.staff)
+										{
+											<option value="@item.empid">@item.empcode - @item.empname</option>
+										}
+									</select>
+								</div>
+								<div class="col-md-12 depart">
+									<label for="">Department</label>
+								
+									<select name="DepartIds[]" id="departid" class="form-control select2" multiple="multiple" style="width:100%">
+										@foreach (var d in Model.departs)
+										{
+											<optgroup label="@d.Depart"></optgroup>
+											@foreach (var item in d.SubDepartments)
+											{
+												<option value="@item.DepartID">@item.Depart</option>
+											}
+										}
+									</select>
+								</div>
+								<div class="col-md-12">
+									<br/>
+									<div class="form-group" style="margin-top: -10px;">
+										<input type="hidden" id="lvD" name="Recurring" value="0" />
+										<div class="custom-control custom-radio rd-opt">
+											<input class="custom-control-input optDuration custom-control-input-primary" type="radio" id="optDateWise" value="0" name="optR" checked>
+											<label for="optDateWise" class="custom-control-label">Date wise</label>
+										</div>
+										<div class="custom-control custom-radio rd-opt">
+											<input class="custom-control-input optDuration custom-control-input-primary" type="radio" id="optRecurring" value="1" name="optR">
+											<label for="optRecurring" class="custom-control-label">Recurring Day</label>
+										</div>
+									
+									</div>
+								</div>
+								<div class="col-md-12">
+									<div class="row">
+										<div class="col-md-2">
+											<label>Day State</label>
+											<select name="state" id="ddStat" class="form-control ">
+												<option value="OFF">OFF</option>
+												<option value="Sch Days">Sch Days</option>
+											</select>
+
+										</div>
+										<div class="col-md-2">
+											<label>From Date</label>	
+											<input type="date" id="dtFrom" name="fdate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required">
+										</div>
+										<div class="col-md-2 todate">
+											<label>To Date</label>	
+											<input type="date" id="dtTo" name="tdate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required">
+										</div>
+										<div class="col-md-2">
+											<label>Duration</label>
+											<span id="Duration" class="form-control"></span>
+										</div>
+										<div class="col-md-3 repeat" style="display:none;">
+											<label>Repeat On</label>
+											<select name="option" id="ddOpt" class="form-control ">
+												<option value="0">Each Week</option>
+												<option value="1">Alternate Week</option>
+												<option value="2">Once/Month (1st Week)</option>
+												<option value="3">Once/Month (2nd Week)</option>
+												<option value="4">Once/Month (3rd Week)</option>
+												<option value="5">Once/Month (4th Week)</option>
+											</select>
+
+										</div>
+									</div>
+								</div>
+							
+								<div class="col-md-12">
+									<label>Description</label>
+									<textarea name="descs" class="form-control" rows="3"></textarea>
+								</div>
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	function getNumberOfDays(start, end) {
+		const date1 = new Date(start);
+		const date2 = new Date(end);
+		// One day in milliseconds
+		const oneDay = 1000 * 60 * 60 * 24;
+		// Calculating the time difference between two dates
+		const diffInTime = date2.getTime() - date1.getTime();
+		// Calculating the number of days between two dates
+		const diffInDays = Math.round(diffInTime / oneDay);
+		return (diffInDays + 1) + " day(s)";
+	}
+	$(document).ready(function () {
+		$("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+
+		$(function () {
+			$("#tbWorkDays").DataTable({
+				"ordering": false,
+				"responsive": true,
+			})
+			$('#tbEmps').DataTable({
+				// "bPaginate": false
+			});
+		});
+		$("#EmpId").on('change', function (e) {
+			WorkDaysLine($("#EmpId").val());
+		});
+	});
+	$("#dtFrom, #dtTo").on('change', function (e) {
+		// $("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+		dtUpdate();
+	});
+	$('#btnNewWorkDays').on('click', function () {
+		$('.frm').val('');
+		$('#dgWorkDays').modal("show");
+	});
+
+	$(".optMode").on('change', function (e) {
+		$("#Mode").val($(this).val());
+		if ($("#Mode").val() == "1") {
+			$(".staff").hide();
+			$(".depart").show();
+
+		}
+		else {
+			$(".staff").show();
+			$(".depart").hide();
+		}
+	});
+	function loadWorkDays(obj) {
+		var WorkDayss = ""
+		for (const e of obj) {
+			WorkDayss += "<tr><td>" + e.fdate + "</td><td>" + e.tdate + "</td><td>" + e.dayStatus + "</td><td>" + e.remarks + "</td><td title='" + (e.modifyby != null ? (e.modifyby + " @@ " + e.modify) : "") + "'>" + e.createdby + " @@ " + e.created + "<span class='btnsh float-right'><a onclick='DelWorkDays(" + e.id + ")' class='btn btn-outline-danger btn-xs'><i class='fa-solid fa-trash fa-beat'></i> Delete</a></span></td></tr>";
+		}
+		$("#tblWorkDays").html(WorkDayss);
+	
+	}
+	function DelWorkDays(id) {
+		Swal.fire({
+			title: "Are you sure?",
+			text: "You won't be able to revert this!",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "Yes, delete it!"
+		}).then((result) => {
+			if (result.isConfirmed) {
+				$.get("/Administration/DelWorkDays?id=" + id).done(function (data) {
+					loadWorkDays(data);
+					Swal.fire({
+						title: "Deleted!",
+						text: "Record has been deleted.",
+						icon: "success"
+					});
+				});
+			}
+		});
+	}
+	function WorkDaysLine(id) {
+		$.get("/Administration/GetWorkDays?id=" + id).done(function (data) {
+			loadWorkDays(data);
+		});
+	}
+	$('#tbEmps tr').each(function (a, b) {
+		$(b).click(function () {
+			$('#tbEmps tr').css('font-weight', 'normal').css('color', '#000');
+			$(this).css('font-weight', 'bold').css('color', '#2a327d');
+		});
+	});
+	$(".optDuration").on('change', function (e) {
+		$("#lvD").val($(this).val());
+		dtUpdate();
+	});
+	function dtUpdate() {
+		if ($("#lvD").val() == "1") {
+			$(".todate").hide();
+			$("#dtTo").val($("#dtFrom").val());
+			var d = new Date($("#dtFrom").val());
+			var dayName = d.toString().split(' ')[0];
+			// $("#Duration").html("repeat on each " + dayName);
+			$("#Duration").html(dayName);
+			$(".repeat").show();
+		}
+		else {
+			$(".todate").show();
+			$(".repeat").hide();
+			$("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+		}
+	}
+</script>

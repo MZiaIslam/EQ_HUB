@@ -1,0 +1,96 @@
+﻿@{
+    ViewData["Title"] = "Manual Attendance";
+    ViewData["pgHeader"] = "Amend Attendance";
+}
+<style type="text/css">
+    .ft16 {
+        font-size: 14px;
+    }
+
+    .rd-opt {
+        float: left;
+        padding-right: 12px;
+    }
+
+    .btnsh {
+        opacity: 0;
+    }
+
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <form asp-controller="Attendance" asp-action="SetManualAttend" enctype="multipart/form-data" method="post">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="">Staff Name</label>
+                    <select name="EmpId" id="staffid" class="form-control select2" style="width:100%" required="required">
+                        <option></option>
+                        @foreach (var item in Model.staff)
+                        {
+                            <option value="@item.empid">@item.empcode - @item.empname</option>
+                        }
+                    </select>
+                </div>
+                    <div class="col-md-12" style="padding-top: 10px;" id="staffcard">
+                    </div>
+                <div class="col-md-2">
+                    <label>Attendance Date</label>
+                        <input type="date" id="dtAtt" name="dtAtt" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required">
+                </div>
+
+                <div class="col-md-2">
+                    <label for="">IN Time</label>
+                    <input type="time" name="inTime" value="" class="form-control inTime" required>
+                </div>
+                <div class="col-md-2">
+                    <label for="">OUT Time</label>
+                    <input type="time" name="outTime" value="" class="form-control oTime" required>
+                </div>
+                 
+                <div class="col-md-12">
+                    <br />
+                    <button type="submit" id="btnSave" class="btn btn-primary upatt"><i class="fa-solid fa-save"></i> Save Record</button>
+                </div>
+       
+            </div>
+            </form>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    function getAttend(){
+            $.get("/Attendance/ManualAttend?empid=" + $("#staffid").val() + "&dtAtt=" + $("#dtAtt").val()).done(function (obj) {
+                    $("#staffcard").html("");
+                
+                    for (const e of obj) {
+    $("#staffcard").html('<div style="float: left;"><img src="/dist/img/StaffData/pics/'+$("#staffid").val()+'.png" onerror="this.onerror=null;this.src=\'/dist/img/StaffData/pics/usr.png\';" alt="User Image" style="width: 80px;"></div><div style="margin-left: 90px;"><h6 ><i class="fas fa-clipboard-user"></i> '+ e.empCode +'</h6><span  style="font-weight: 600;">'+ e.fname +'</span><span class="product-description"> ('+ e.depart +')</span><p>'+ e.shiftName +'</p></div>');
+    $(".inTime").val(e.intime); $(".oTime").val(e.outtime);
+
+                     
+                    }
+                });
+    }
+    $(document).ready(function () {
+       getAttend();
+        $(document).on("change", "#staffid,#dtAtt", function (e) {
+        getAttend();
+        });
+        $(document).on("click", ".upatt", function () {
+            $(this).html('<i class="fa-solid fa-arrows-spin fa-spin"></i> Save Record');
+
+          
+            setTimeout(
+                function () {
+                    $(".upatt").html('<i class="fa-solid fa-save"></i> Save Record');
+                }, 500);
+        });
+    function upTime(itime, dt, emp,otime,shift) {
+        $.get("/Attendance/upTime?itime=" + itime + "&otime=" + otime + "&date=" + dt + "&empcode=" + emp+"&shift="+shift).done(function (data) {
+        });
+    }
+    });
+</script>

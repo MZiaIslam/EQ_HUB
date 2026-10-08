@@ -1,0 +1,792 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Staff Registration";
+    ViewData["pgHeader"] = "New Staff Registration";
+}
+<style type="text/css">
+    .select2-container--default .select2-results__group {
+        cursor: default;
+        display: block;
+        padding: 6px;
+        background: #e5e5e5;
+        color: #2a327d;
+    }
+    .btnsh {
+        opacity: 0;
+    }
+    #deactivate {
+        opacity: 0;
+    }
+    .col-md-2:hover #deactivate {
+        opacity: 1;
+    }
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <form asp-controller="HR" asp-action="EditStaff" enctype="multipart/form-data" method="post">
+                <div class="row">
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            PERSONAL DETAIL
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <p class="mb-1" style="color: red;font-size: small;">
+                                @TempData["msg"]
+                            </p>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <label>Employee ID <i class="fa-thin fa-asterisk fa-beat-fade fa-lg" style="color: #f00000;"></i></label>
+                                        <input type="number" name="EmpID" id="EmpID" value="@Model.emp.EmpID" class="form-control" hidden>
+                                        <input type="number" value="@Model.emp.EmpCode" name="EmpCode" class="form-control" required="required">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">First Name <i class="fa-thin fa-asterisk fa-beat-fade fa-lg" style="color: #f00000;"></i></label>
+                                        <input type="text" value="@Model.emp.FName" name="FName" class="form-control" required="required">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Last Name</label>
+                                        <input type="text" name="LName" value="@Model.emp.LName" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">Father Name</label>
+                                        <input type="text" value="@Model.emp.FatherName" name="FatherName" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="">Gender</label>
+                                        <select name="Gender" id="GenderID" class="form-control">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Mobile #</label>
+                                        <input type="text" name="MobileNo" value="@Model.emp.MobileNo" class="form-control">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Date of Birth</label>
+                                        <input type="date" value="@(Model.emp.DateOfBirth==null?"":Model.emp.DateOfBirth.ToString("yyyy-MM-dd"))" name="DateOfBirth" class="form-control" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">Email <i class="fa-thin fa-asterisk fa-beat-fade fa-lg" style="color: #f00000;"></i></label>
+                                        <input type="text" name="Email" value="@Model.emp.Email" id="txtEmil" class="form-control" required="required">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="">Marital Status</label>
+                                        <select id="MaritalID" name="Marital" class="form-control">
+                                            <option value="Single">Single</option>
+                                            <option value="Married">Married</option>
+                                            <option value="Divorced">Divorced</option>
+                                            <option value="Widowed">Widowed</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Joining Date</label>
+                                        <input value="@(Model.emp.JoiningDate==null?"":Model.emp.JoiningDate.ToString("yyyy-MM-dd"))" type="date" name="JoiningDate" class="form-control " />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Designation <i class="fa-thin fa-asterisk fa-beat-fade fa-lg" style="color: #f00000;"></i></label>
+                                        <select name="Designation" id="cboDesig" class="form-control select2" required="required">
+                                            @foreach (var item in Model.desig)
+                                            {
+                                                <option value="@item.Id">@item.Designation</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">User Group/Role</label>
+                                        <div class="input-group mb-4">
+                                            <select name="GroupID" id="Grp" class="form-control select2">
+                                                @foreach (var item in Model.usergroups)
+                                                {
+                                                    <option value="@item.GroupID">@item.GroupName</option>
+                                                }
+                                            </select>
+                                            <div class="input-group-append">
+                                                <div class="input-group-text btn-primary">
+                                                  
+                                                    <button  data-toggle="modal" data-target="#dgSetPass" type="button" class="btn btn-xs btn-primary"><i class="fa fa-key"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label id="deactivate" class="btn @(Model.emp.EmpStatus == 0 ? "btn-success" : "btn-danger") btn-xs">
+                                    @(Model.emp.EmpStatus == 0 ? "Activate Profile" : "Deactivate Profile")
+                                </label><div class="clearfix">
+                                </div>
+                                <label>Photo</label><div class="clearfix">
+                                </div>
+                                <img id="imgStaff" src="~/dist/img/staffdata/pics/@(Model.emp.EmpID).png" onerror="this.onerror=null;this.src='/dist/img/StaffData/pics/usr.png'" style="height: 140px;">
+                                <input type="file" name="photo" id="StaffPic" class="" accept="image/png, image/jpeg" style="display: none;">
+                                <h3></h3>
+                                <label for="StaffPic" class="btn btn-primary btn-xs">
+                                    Upload Image
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 10px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            PRIVATE CONTACT
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Temporary Address</label>
+                                        <textarea name="Address" class="form-control" rows="3">@Model.emp.Address</textarea>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Permanent Address</label>
+                                        <textarea name="permanentaddress" class="form-control" rows="3">@Model.emp.permanentaddress</textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">
+                                            Contact Person
+                                        </label>
+                                        <input value="@Model.emp.ContactPerson" type="text" name="ContactPerson" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">
+                                            Relationship
+                                        </label>
+                                        <input value="@Model.emp.Relationship" type="text" name="Relationship" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="">
+                                            Contact No.
+                                        </label>
+                                        <input value="@Model.emp.ContactNo" type="text" name="ContactNo" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 10px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            NOTE
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="col-md-12">
+                                    <label for="">Note/Remarks</label>
+                                    <textarea name="remarks" class="form-control" rows="3">@Model.emp.remarks</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 36px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-left: 48px;">
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Save Record</button>
+                    </div>
+                    <div class="col-12" style="padding-top: 36px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            ACADEMIC INFO.
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="col-md-12">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Qualification</th>
+                                                <th>Institute/University</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tblEdu">
+                                            @foreach (var item in Model.staffedus)
+                                            {
+                                                <tr><td>@item.qualification</td><td>@item.institute</td><td>@item.description<span class='btnsh float-right'><a r-data="@(JsonConvert.SerializeObject(item))" class="btn-edu btn btn-outline-info btn-xs"><i class="fa-solid fa-edit fa-beat"></i> Edit</a> <a onclick="DelEdu(@(item.id))" class="btn btn-outline-danger btn-xs"><i class="fa-solid fa-trash fa-beat"></i> Delete</a></span></td></tr>
+                                            }
+                                        </tbody>
+                                        <tfoot><tr><td colspan="3"><a id="btnEdu" class="btn btn-outline-info btn-xs"><i class="fa-solid fa-user-plus"></i> Add Education</a></td></tr></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 36px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            WORK HISTORY
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="col-md-12">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Job Field</th>
+                                                <th>Organisation</th>
+                                                <th>Duration</th>
+                                                <th>Description</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tblWorkHis">
+                                            @foreach (var item in Model.workhist)
+                                            {
+                                                <tr><td>@item.jobfield</td><td>@item.organisation</td><td>@item.duration</td><td>@item.description<span class='btnsh float-right'><a r-data="@(JsonConvert.SerializeObject(item))" class="btn-work btn btn-outline-info btn-xs"><i class="fa-solid fa-edit fa-beat"></i> Edit</a> <a onclick="DelWork(@(item.id))" class="btn btn-outline-danger btn-xs"><i class="fa-solid fa-trash fa-beat"></i> Delete</a></span></td></tr>
+                                            }
+                                        </tbody>
+                                        <tfoot><tr><td colspan="4"><a id="btnWork" class="btn btn-outline-info btn-xs"><i class="fa-solid fa-user-plus"></i> Add Resume</a></td></tr></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 36px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            DOCUMENTS
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="col-md-12">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Document Title</th>
+                                                <th>Type</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tblStaffDocs">
+                                            @foreach (var item in Model.staffdocs)
+                                            {
+                                                <tr><td><a href="~/dist/img/staffdata/docs/@item.docname">@item.title</a></td><td>@item.type<span class='btnsh float-right'><a onclick="DelDoc(@(item.id))" class="btn btn-outline-danger btn-xs"><i class="fa-solid fa-trash fa-beat"></i> Delete</a></span></td></tr>
+                                            }
+                                        </tbody>
+                                        <tfoot><tr><td colspan="2"><a id="btnAttach" class="btn btn-outline-info btn-xs"><i class="fa-solid fa-user-plus"></i> Attach Document</a></td></tr></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="dgEdu" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">ACADEMIC INFORMATION</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmStaffEdu" class="" method="post" asp-controller="HR" asp-action="SaveEdu">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <input type="number" name="EmpID" value="@Model.emp.EmpID" hidden>
+                                <input type="number" class="frm" name="Id" id="EduID" hidden>
+                                <label for="text">
+                                    Qualification
+                                </label>
+                                <select name="Qualification" class="form-control frm">
+                                    <option>High School</option>
+                                    <option>Matriculation/O-Levels</option>
+                                    <option>Intermediate/A-Levels</option>
+                                    <option>Bachelors</option>
+                                    <option>Masters</option>
+                                    <option>Doctorate</option>
+                                    <option>Certificate</option>
+                                    <option>Diploma</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="text">
+                                    Institute/University
+                                </label>
+                                <input type="text" name="Institute" class="form-control frm" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="text">
+                                    Description
+                                </label>
+                                <textarea name="Description" class="form-control frm" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="btnSaveEdu" onclick="SaveEdu();" tag="0" type="button" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="dgWorkHis" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    WORK HISTORY
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmWorkHis" class="" method="post" asp-controller="HR" asp-action="SaveWorkHis">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <input type="number" name="EmpID" value="@Model.emp.EmpID" hidden>
+                                <input type="number" class="frm" name="Id" id="WorkID" hidden>
+                                <label for="text">
+                                    Organisation
+                                </label>
+                                <input type="text" name="Organisation" class="form-control frm" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="text">
+                                    Job Field
+                                </label>
+                                <input type="text" name="JobField" class="form-control frm" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="text">
+                                    Duration Start
+                                </label>
+                                <input type="date" name="DurationStart" class="form-control frm" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="text">
+                                    Duration End
+                                </label>
+                                <input type="date" name="DurationEnd" class="form-control frm" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="text">
+                                    Description
+                                </label>
+                                <textarea name="Description" class="form-control frm" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="btnWorkHis" onclick="SaveWorkHis();" tag="0" type="button" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="dgDocs" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">DOCUMENTS</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmStaffDocs" class="" method="post" asp-controller="HR" asp-action="SaveDocs" enctype="multipart/form-data">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="text">
+                                    Title
+                                </label>
+                                <input type="text" name="Title" class="form-control frm" />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <input type="number" name="EmpID" value="@Model.emp.EmpID" hidden>
+                                <input type="number" class="frm" name="Id" id="DocID" hidden>
+                                <label for="text">
+                                    Document Type
+                                </label>
+                                <select name="Type" class="form-control frm">
+                                    <option value="CNIC">CNIC</option>
+                                    <option value="Domicile">Domicile</option>
+                                    <option value="Matric Certificate">Matric Certificate</option>
+                                    <option value="Matric Marksheet">Matric Marksheet</option>
+                                    <option value="Intermediate Certificate">Intermediate Certificate</option>
+                                    <option value="Intermediate Marksheet">Intermediate Marksheet</option>
+                                    <option value="Degree">Degree</option>
+                                    <option value="Certificate">Certificate</option>
+                                    <option value="Experience Letter">Experience Letter</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="aFile">
+                                    Upload File
+                                </label><br />
+                                <input type="file" name="doc" id="aFile" class="btn btn-primary btn-xs" style="width: 100%;" accept="image/png, image/jpeg" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="btnSaveDoc" tag="0" type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="dgDeactivate" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Deactivate Profile</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmDeactivate" class="" method="post" asp-controller="HR" asp-action="Deactivate">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="text">
+                                    Date
+                                </label>
+                                <input type="date" name="tdate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <input type="number" name="EmpID" value="@Model.emp.EmpID" hidden>
+                                <label for="text">
+                                    Status
+                                </label>
+                                <select name="stat" id="stat" class="form-control">
+                                    @if (Model.emp.EmpStatus == 0)
+                                    {
+                                        <option>Active</option>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var item in Model.libs)
+                                        {
+                                            <option>@item.LibName</option>
+                                        }
+                                        @* <option>Inactive</option><option>Terminate</option> *@
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 rdate" style="display:none">
+                            <div class="form-group">
+                                <label for="text">
+                                    Resignation Date
+                                </label>
+                                <input type="date" id="rdate" name="rdate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control " />
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="text">
+                                    Description
+                                </label>
+                                <textarea name="Descs" class="form-control frm" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button id="btnDeactivate" type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;@(Model.emp.EmpStatus == 0 ? "Activate Profile" : "Deactivate Profile")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal" id="dgSetPass" style="display: none;">
+    <div class="modal-dialog" style="width: 350px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Set Password</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group has-feedback" style="margin-bottom: 10px;">
+                    <input id="txtSPass" onkeyup="checkPasswordStrength(this)" type="password" class="form-control" placeholder="Password" required>
+                </div>
+                <div class="form-group has-feedback">
+                    <input id="txtSRPass" type="password" class="form-control" placeholder="Retype password" required>
+                </div>
+                <div class="strength-message"></div>
+                <div class="alert alert-warning alert-dismissible" style="display: none">
+                    <span class="ptext"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnSetPass" type="button" class="btn btn-danger">Set Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* <script src="~/plugins/jquery/jquery.min.js"></script> *@
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#StaffPic").on('change', function (e) {
+            if ($($('#StaffPic')[0]).val() != "") {
+                var file = $('#StaffPic')[0].files[0];
+                var reader = new FileReader();
+                reader.onloadend = function () {
+                    imgStaff = reader.result;
+                    $('#imgStaff').attr('src', imgStaff);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        $("#txtEmil").on('change', function (e) {
+            $("#txtLogin").html($("#txtEmil").val());
+        });
+        $("#MaritalID").val('@(Model.emp.Marital)'); $("#GenderID").val('@(Model.emp.Gender)');
+        $("#cboDesig").val('@(Model.emp.Designation)');
+        $("#Grp").val('@(Model.emp.GroupID)');
+        $(document.body).on("click", ".btn-edu", function () {
+            $('.frm').val('');
+            let rdata = JSON.parse($(this).attr('r-data'));
+            $('[name=Qualification]').val(rdata.qualification);
+            $('[name=Institute]').val(rdata.institute);
+            $('[name=Description]').val(rdata.description);
+            $('#EduID').val(rdata.id);
+            $('#dgEdu').modal("show");
+        });
+        $(document.body).on("click", ".btn-work", function () {
+            $('.frm').val('');
+            let rdata = JSON.parse($(this).attr('r-data'));
+            $('[name=Organisation]').val(rdata.organisation);
+            $('[name=JobField]').val(rdata.jobfield);
+            $('[name=DurationStart]').val(rdata.durationstart);
+            $('[name=DurationEnd]').val(rdata.durationend);
+            $('[name=Description]').val(rdata.description);
+            $('#WorkID').val(rdata.id);
+            $('#dgWorkHis').modal("show");
+        });
+        $('#btnSetPass').on('click', function() {
+            const password = $("#txtSPass").val();
+            const confirmPassword = $("#txtSRPass").val();
+                if (!isPasswordStrong(password)) {
+                    $(".ptext").html("ERROR: Password is not strong enough.");
+                    $(".alert-dismissible").show().delay(3000).fadeOut();
+                    return;
+                }
+                if (password === confirmPassword && password.trim()) {
+                    $.post("/hr/SetEPass", {
+                        pass: password,
+                        rpass: confirmPassword,
+                        empid: $("#EmpID").val()
+                    }).done(() => {
+                        $('#dgSetPass').modal('hide');
+                        $(".alert-dismissible").hide();
+                    });
+                } else {
+                        $(".ptext").html("ERROR: Your password and confirmation password do not match.");
+                        $(".alert-dismissible").show().delay(3000).fadeOut();
+                        }
+        });
+    });
+    function WebChk(el) {
+        if (el.checked) {
+            $("#txtPass, #Grp").prop("disabled", false);
+        } else {
+            $("#txtPass, #Grp").prop("disabled", true);
+            $("#WebLogin").val("0");
+        }
+    }
+    $('#btnEdu').on('click', function () {
+        if ($('#EmpID').val() == 0) {
+            return;
+        }
+        $('.frm').val('');
+        $('#dgEdu').modal("show");
+    });
+    $('#deactivate').on('click', function () {
+        if ($('#EmpID').val() == 0) {
+            return;
+        }
+        $('.frm').val('');
+        $('#dgDeactivate').modal("show");
+    });
+    $('#btnAttach').on('click', function () {
+        if ($('#EmpID').val() == 0) {
+            return;
+        }
+        $('.frm').val('');
+        $('#dgDocs').modal("show");
+    });
+    $('#btnWork').on('click', function () {
+        if ($('#EmpID').val() == 0) {
+            return;
+        }
+        $('.frm').val('');
+        $('#dgWorkHis').modal("show");
+    });
+    function DelEdu(id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.get("/HR/DelEdu?id=" + id + "&empid=" + $("#EmpID").val()).done(function (data) {
+                    EduList(data);
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Record has been deleted.",
+                        icon: "success"
+                    });
+                });
+            }
+        });
+    }
+    function EduList(obj) {
+        var edu = ""
+        for (const e of obj) {
+            edu += "<tr><td>" + e.qualification + "</td><td>" + e.institute + "</td><td>" + e.description + "<span class='btnsh float-right'><a r-data='" + JSON.stringify(e) + "' class='btn btn-edu btn-outline-info btn-xs'><i class='fa-solid fa-edit fa-beat'></i> Edit</a> <a onclick='DelEdu(" + e.id + ")' class='btn btn-outline-danger btn-xs'><i class='fa-solid fa-trash fa-beat'></i> Delete</a></span></td></tr>";
+        }
+        $("#tblEdu").html(edu);
+        $('#dgEdu').modal("hide");
+    }
+    function SaveEdu() {
+        $.post("/HR/SaveEdu", $("#frmStaffEdu").serialize()).done(function (data) {
+            EduList(data);
+        });
+    }
+    function SaveWorkHis() {
+        $.post("/HR/SaveWorkHis", $("#frmWorkHis").serialize()).done(function (data) {
+            WorkList(data);
+        });
+    }
+    function WorkList(obj) {
+        var wrk = ""
+        for (const e of obj) {
+            wrk += "<tr><td>" + e.organisation + "</td><td>" + e.jobfield + "</td><td>" + e.duration + "</td><td>" + e.description + "<span class='btnsh float-right'><a r-data='" + JSON.stringify(e) + "' class='btn btn-work btn-outline-info btn-xs'><i class='fa-solid fa-edit fa-beat'></i> Edit</a> <a onclick='DelWork(" + e.id + ")' class='btn btn-outline-danger btn-xs'><i class='fa-solid fa-trash fa-beat'></i> Delete</a></span></td></tr>";
+        }
+        $("#tblWorkHis").html(wrk);
+        $('#dgWorkHis').modal("hide");
+    }
+    function DocsList(obj) {
+        var docs = ""
+        for (const e of obj) {
+            docs += "<tr><td><a href='/dist/img/staffdata/docs/" + e.docname + "'>" + e.title + "</a></td><td>" + e.type + "</td><a onclick='DelWork(" + e.id + ")' class='btn btn-outline-danger btn-xs'><i class='fa-solid fa-trash fa-beat'></i> Delete</a></span></td></tr>";
+        }
+        $("#tblStaffDocs").html(docs);
+        $('#dgDocs').modal("hide");
+    }
+    function DelWork(id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.get("/HR/DelWork?id=" + id + "&empid=" + $("#EmpID").val()).done(function (data) {
+                    WorkList(data);
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Record has been deleted.",
+                        icon: "success"
+                    });
+                });
+            }
+        });
+    }
+    function DelDoc(id) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.get("/HR/DelDoc?id=" + id + "&empid=" + $("#EmpID").val()).done(function (data) {
+                    DocsList(data);
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Record has been deleted.",
+                        icon: "success"
+                    });
+                });
+            }
+        });
+    }
+    $('#stat').on('change', function () {
+        if ($('#stat').val() == "Resignation") {
+            $('.rdate').show();
+            $('#rdate').prop("required", "required");
+        } else { $('.rdate').hide(); $('#rdate').removeProp("required"); }
+    });
+</script>

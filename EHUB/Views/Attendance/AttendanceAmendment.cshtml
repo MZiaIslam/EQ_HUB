@@ -1,0 +1,150 @@
+﻿@{
+	ViewData["Title"] = "Attendance Amendment";
+	ViewData["pgHeader"] = "Amend Attendance";
+}
+<style type="text/css">
+	.ft16 {
+		font-size: 14px;
+	}
+	.rd-opt {
+		float: left;
+		padding-right: 12px;
+	}
+	.btnsh {
+		opacity: 0;
+	}
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+</style>
+<section class="content">
+	<div class="card">
+		<div class="card-body">
+				<div class="row">
+							<div class="col-md-3">
+					<label>Attendance Date</label>
+					<input type="date" id="dtAtt" name="dtAtt" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required">
+							</div>
+							<div class="col-md-9">
+								<label for="">Staff Name</label>
+								<select name="EmpId" id="staffid" class="form-control select2" style="width:100%" required="required">
+								<option value="0">ALL</option>
+									@foreach (var item in Model.staff)
+									{
+										<option value="@item.empid">@item.empcode - @item.empname</option>
+									}
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="">Department Name</label>
+								<select name="DepartId" id="DepartId" class="form-control select2" style="width:100%" required="required">
+								<option value="0">ALL</option>
+									@foreach (var item in Model.depart)
+									{
+									<option value="@item.DepartID">@item.Depart</option>
+									}
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="">Sub-Department</label>
+								<select name="SDepartId" id="SDepartId" class="form-control select2" style="width:100%" required="required">
+								<option value="0">ALL</option>
+								@foreach (var item in Model.sbdepart)
+								{
+									<option value="@item.DepartID">@item.Depart</option>
+								}
+								</select>
+							</div>
+							<div class="col-md-12">
+								<br />
+								<button type="button" id="btnSearch" class="btn btn-primary"><i class="fa-solid fa-file"></i> Search Record</button>
+							</div>
+				<div class="col-md-12">
+						<div class="card-header">
+						</div>
+						<table class="table table-striped table-hover collapsed">
+							<thead>
+								<tr>
+								<th>Attendance Record</th>
+									<th>Shift Plan</th><th>In Time</th>
+									<th>Out Time</th><th></th>
+								</tr>
+							</thead>
+						<tbody id="tblRec">
+							</tbody>
+						</table>
+					</div>
+				</div>
+		</div>
+	</div>
+</section>
+<script type="text/javascript">
+	$(document).ready(function () {
+				var lst = @Json.Serialize(Model.shifts);
+		var shiftopts = "";
+		for (const e of lst) { shiftopts +="<option value='"+e.shiftId+"'>"+e.shiftName+"</option>"}
+		$("#btnSearch").on('click', function (e) {
+			$.get("/Attendance/GetAmendment?empid=" + $("#staffid").val() + "&dtAtt=" + $("#dtAtt").val() + "&depart=" + $("#DepartId").val() + "&sbdepart=" + $("#SDepartId").val() + "").done(function (obj) {
+				$("#tblRec").html("");
+				let idx = 0;
+				for (const e of obj) {
+					$("#tblRec").append("<tr><td><span class='badge badge-primary'>" + e.empCode + "</span>  <b>" + e.fname + "</b><br/><span class='badge badge-success'>" + e.depart + "</span></td><td><select class='form-control select2 shft' style='width: 100%'>" + shiftopts + "</select></td><td><input type='time' value='" + e.intime + "' class='form-control inTime'></td><td><input type='time' value='" + e.outtime + "' class='form-control oTime'></td><td><button type='button' class='btnsh btn btn-primary upatt' idx='" + idx + "' emp='" + e.empCode + "' dt='" + e.attDate + "'><i class='fa-solid fa-save'></i> Save</button></td></tr>");
+					$($(".shft")[idx]).val(e.shiftId);
+					idx += 1;
+				}
+				// for (const e of obj) {
+				// 	rec += "<tr><td><span class='badge badge-primary'>" + e.empCode + "</span>  <b>" + e.fName + " " + e.lName + "</b><br/><span class='badge badge-success'>" + e.depart + "</span></td><td><select class='form-control select2 shft' style='width: 100%'>" + shiftopts + "</select></td><td><input type='time' value='" + e.intime + "' class='form-control inTime'></td><td><input type='time' value='" + e.outtime + "' class='form-control oTime'></td><td><button type='button' class='btnsh btn btn-primary upatt' idx='" + idx + "' emp='" + e.empCode + "' dt='" + e.attDate + "'><i class='fa-solid fa-save'></i> Save</button></td></tr>";
+				// 	idx += 1;
+				// }
+				// $("#tblRec").html(rec);
+			});
+		});
+		$(document).on("click", ".upatt", function () {
+			$(this).html('<i class="fa-solid fa-arrows-spin fa-spin"></i> Save');
+			let idx = $(this).attr("idx");
+			let itime = $($(".inTime")[idx]).val();
+			let dt = $(this).attr("dt");
+			let emp = $(this).attr("emp");
+		let shift = $($(".shft")[idx]).val();
+			let otime = $($(".oTime")[idx]).val();
+			upTime(itime, dt, emp, otime,shift)
+			setTimeout(
+				function () {
+					$(".upatt").html('<i class="fa-solid fa-save"></i> Save');
+				}, 500);
+		});
+		   // getFlags($("#dtRequest").val(), $("#staffid").val());
+		   // getExemptDays();
+		   // $(function () {
+				 //  $("#tbleaves").DataTable({
+					// 	 "ordering": true,
+					// 	 "responsive": true,
+				 //  })
+		   // });
+	});
+	// $("#dtRequest, #staffid").on('change', function (e) {
+	// 	 getFlags($("#dtRequest").val(), $("#staffid").val());
+	// });
+// 	function getFlags(date, staff) {
+// 		 let opts="";
+// 			 $.get("/Attendance/Flags?dt=" + date+"&staff="+staff).done(function (data) {
+// $.each(JSON.parse(data),function(i, item){
+// opts += '<option value="' + item.stat + '">' + item.stat + '</option>';
+// });
+// $("#FlagType").html(opts)
+// 			});
+// 		 }
+// 			 function getExemptDays() {
+// 		 let opts="";
+// 			 $.get("/Attendance/ExemptDays").done(function (data) {
+// $.each(JSON.parse(data),function(i, item){
+// opts += '<option value="' + item.ExemTypeId + '">' + item.ExemType + '</option>';
+// });
+// $("#ExemType").html(opts)
+// 			});
+// 		 }
+	function upTime(itime, dt, emp,otime,shift) {
+		$.get("/Attendance/upTime?itime=" + itime + "&otime=" + otime + "&date=" + dt + "&empcode=" + emp+"&shift="+shift).done(function (data) {
+		});
+	}
+</script>

@@ -1,0 +1,273 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Feedback";
+    ViewData["pgHeader"] = "📝 Feedback";
+    var uinfo = User.Claims.ToArray();
+}
+<style type="text/css">
+    .select2-container--default .select2-results__group {
+        cursor: default;
+        display: block;
+        padding: 6px;
+        background: #e5e5e5;
+        color: #2a327d;
+    }
+    .btnsh {
+        opacity: 0;
+    }
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+    .ft16 {
+        font-size: 14px;
+    }
+    .select2-container {
+        width: 100% !important;
+    }
+    .direct-chat-text {
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        border: 1px solid #E2E8F0;
+        background: #F8FAFC;
+    }
+    .btn-msg {
+        background: transparent;
+        border-width: medium;
+        border-style: none;
+        border-color: currentcolor;
+        border-image: none;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 4px;
+        color: rgb(100, 116, 139);
+        font-size: 0.8rem;
+    }
+    .direct-chat-text p {
+        margin-bottom: 0;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <div class="row" style="
+  background: #FFFFFF;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  gap: 16px 0;
+">
+                <!-- Student Name -->
+                <div class="col-md-2">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Student Name</label>
+                    <div style="font-size: 0.95rem; font-weight: 600; color: #0F172A;">@(Model.SessionSch.StudentName)</div>
+                </div>
+                <!-- Guardian Name -->
+                <div class="col-md-2">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Guardian Name</label>
+                    <div style="font-size: 0.95rem; font-weight: 500; color: #334155;">
+                        @(Model.SessionSch.Guardian) <span style="font-size: 0.8rem; color: #64748B;">(@(Model.SessionSch.Relationship))</span>
+                    </div>
+                </div>
+                <!-- Date / Timings -->
+                <div class="col-md-5">
+                    @{
+                        if ((uinfo[3].Value == "1" || uinfo[3].Value == "20") && Model.SessionSch.Stat != "Completed")
+                        {
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Start Time</label>
+                                    <input id="StartTime" type="datetime-local" class="form-control" value="@Model.SessionSch.StartTime.ToString("yyyy-MM-ddTHH:mm")" style="border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; color: #1E293B;">
+                                </div>
+                                <div class="col-md-6">
+                                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">End Time</label>
+                                    <input id="EndTime" type="datetime-local" class="form-control" value="@Model.SessionSch.EndTime.ToString("yyyy-MM-ddTHH:mm")" style="border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; color: #1E293B;">
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Date & Timings</label>
+                            <div style="font-size: 0.9rem; font-weight: 500; color: #1E293B;">
+                                @(Model.SessionSch.StartTime.ToString("dd MMMM yyyy")) @Model.SessionSch.StartTime.ToString("hh:mm tt") - @Model.SessionSch.EndTime.ToString("hh:mm tt")
+                            </div>
+                        }
+                    }
+                </div>
+                <!-- Status -->
+                <div class="col-md-3">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Status</label>
+                    @{
+                        if (uinfo[3].Value == "18")
+                        {
+                            <div style="font-size: 0.9rem; font-weight: 600; color: #0F172A;">@(Model.SessionSch.Stat)</div>
+                        }
+                        else
+                        {
+                            <select class="form-control" id="Status" style="border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; color: #1E293B; font-weight: 500;">
+                                <option>@(Model.SessionSch.Stat)</option>
+                                <option>Scheduled</option>
+                                <option>Completed</option>
+                                <option>Cancel</option>
+                            </select>
+                        }
+                    }
+                </div>
+                <!-- Subject Badge -->
+                <div class="col-md-2" style="margin-top: 8px;">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 6px;">Subject(s)</label>
+                    <div>
+                        <span style="display: inline-block; background: #EFF6FF; color: #1D4ED8; font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 12px;">
+                            @(Model.SessionSch.Subjects)
+                        </span>
+                    </div>
+                </div>
+                <!-- Tutor Selection -->
+                <div class="col-md-7" style="margin-top: 8px;">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Tutor</label>
+                    @{
+                        if ((uinfo[3].Value == "1" || uinfo[3].Value == "20") && Model.SessionSch.Stat != "Completed")
+                        {
+                            @Html.DropDownList(
+                            "SelectedEmpId",
+                                        new SelectList(Model.emps, "Value", "Text", Model.SelectedEmpId),
+                                        new { @class = "form-control", id = "cboEmp", style = "border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; color: #1E293B;" }
+                                        )
+                                        }
+                        else
+                        {
+                            <div style="font-size: 0.9rem; font-weight: 500; color: #1E293B;">@(Model.SessionSch.Tutor)</div>
+                        }
+                    }
+                </div>
+                <!-- Points Input -->
+                @{
+                    if (uinfo[3].Value != "18")
+                    {
+                        <div class="col-md-3" style="margin-top: 8px;">
+                            <label style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #64748B; letter-spacing: 0.5px; margin-bottom: 4px;">Points</label>
+                            <input type="number" id="txpoints" class="form-control" value="@(Model.SessionSch.points)" style="border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; color: #1E293B; max-width: 100px;">
+                        </div>
+                    }
+                }
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="direct-chat direct-chat-primary dtmessages">
+                        <div class="card-body" style="margin-top: 40px;">
+                            @for (int i = 0; i < Model.feedbacks.Count; i++)
+                            {
+                                var item = Model.feedbacks[i];
+                                var right = (item.CreatedBy.ToString() == uinfo[2].Value ? "right" : "left");
+                                var left = (item.CreatedBy.ToString() == uinfo[2].Value ? "left" : "right");
+                                <div class="direct-chat-msg @right">
+                                    <div class="direct-chat-infos clearfix"> <span class="direct-chat-name float-@right">@item.name</span>  </div><img class="direct-chat-img" src="/dist/img/@(item.utype == "e" ? "StaffData" : "StudentData")/pics/@(item.CreatedBy).png" onerror="this.onerror=null;this.src='/dist/img/StaffData/pics/usr.png';" alt="P"><div class="direct-chat-text">
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <span class="float-@right" style="font-weight: 600;color: #64748B;letter-spacing: 0.5px;font-size: x-small;">@item.Created.ToString("dd MMMM yyyy hh:mm tt")</span>
+                                                @{
+                                                    if (uinfo[2].Value == item.CreatedBy.ToString())
+                                                    {
+                                                        <div class="chat-actions" style="display: flex;gap: 8px;float: @left;">
+                                                            <button type="button" onclick="editMessage(@i)" title="Edit" class="btn-msg" onmouseover="this.style.background='#E2E8F0'; this.style.color='#2563EB';" onmouseout="this.style.background='transparent'; this.style.color='#64748B';"><i class="fas fa-pencil-alt"></i></button>
+                                                            <button type="button" onclick="deleteMessage(@item.id)" title="Delete" class="btn-msg" onmouseover="this.style.background='#FEE2E2'; this.style.color='#DC2626';" onmouseout="this.style.background='transparent'; this.style.color='#64748B';"><i class="fas fa-trash-alt"></i></button>
+                                                        </div>
+                                                    }
+                                                }
+                                            </div>
+                                        </div>
+                                        @Html.Raw(item.details)
+                                        @if (!string.IsNullOrEmpty(item.filepath))
+                                        {
+                                            <div><a href="~/uploads/@item.filepath" target="_blank">📎@item.filepath.Split("\\")[1]</a></div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer p-0">
+                            <form id="frmMSG" method="post" asp-controller="home" asp-action="Feedback" enctype="multipart/form-data">
+                                <textarea id="summernote" name="details" placeholder="Type your message..." class="form-control" rows="6" style="width:100%"></textarea>
+                                <input type="hidden" id="msgid" name="msgid" value="0" />
+                                <p style="margin-bottom: 8px;"></p>
+                                <input type="file" name="Attachment" />
+                                <p style="margin-bottom: 8px;"></p>
+                                <div class="icheck-primary">
+                                    @Html.CheckBox("emailed", true)
+                                    <label for="emailed">
+                                        Also send this message to the correspondent via email?
+                                    </label>
+                                </div>
+                                <button type="submit" id="btnPost" class="btn btn-primary"><i class="fa-solid fa-comment-dots"></i> Post Feedback</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    $(document).on("change", "#Status, #txpoints, #StartTime, #EndTime, #cboEmp", function (e) {
+        var statusVal = encodeURIComponent($("#Status").val() || "");
+        var pointsVal = encodeURIComponent($("#txpoints").val() || "");
+        var sessionId = "@Model.SessionSch.id";
+        @if ((uinfo[3].Value == "1" || uinfo[3].Value == "20") && Model.SessionSch.Stat != "Completed")
+        {
+                                        <text>
+                                        var startTimeVal = encodeURIComponent($("#StartTime").val() || "");
+                                        var endTimeVal = encodeURIComponent($("#EndTime").val() || "");
+                                        var tutorVal = encodeURIComponent($("#cboEmp").val() || "");
+                                        var url = "/home/SetStat?stat=" + statusVal
+                                                + "&points=" + pointsVal
+                                                + "&id=" + sessionId
+                                                + "&stime=" + startTimeVal
+                                                + "&etime=" + endTimeVal
+                                                + "&tutor=" + tutorVal;
+                                        </text>
+        }
+        else
+        {
+                                        <text>
+                                        var url = "/home/SetStat?stat=" + statusVal
+                                                + "&points=" + pointsVal
+                                                + "&id=" + sessionId;
+                                        </text>
+        }
+        $.get(url).done(function (data) {
+            // Handle response
+        });
+    });
+    $(document).ready(function () {
+        $('#summernote').summernote({ height: 150 });
+    });
+            function deleteMessage(id){
+                Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.get("/Home/DelMessage?id=" + id).done(function (data) {
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Record has been deleted.",
+                        icon: "success"
+                    });
+                    location.href = "";
+                });
+            }
+        });
+    }
+        function editMessage(i) {
+        var item = @Html.Raw(Json.Serialize(Model.feedbacks));
+        $("#msgid").val(item[i].id);
+        $("#btnPost").html('<i class="fa-solid fa-comment-dots"></i> Update Feedback');
+        $('#summernote').summernote('code',item[i].details);
+    location.href = "#frmMSG";
+    }
+</script>

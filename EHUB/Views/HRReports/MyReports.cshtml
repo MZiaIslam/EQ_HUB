@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "My Reports";
+    ViewData["pgHeader"] = "My Report Collections";
+}
+<style type="text/css">
+    .btn-rpt:hover{
+        background: aliceblue;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                	@foreach (var item in Model)
+                {
+                    <div class="col-md-2 btn-rpt">
+                        <a id="@item.RptID" style="cursor: pointer;" title="@item.Title" href="/HRReports/ReportView?id=@item.RptID">
+                            <img alt="Report" src="/dist/img/crpts.png" width="48">
+                            <br>
+                            @item.Title
+                        </a>
+                    </div>
+                }
+            </div>
+        </div></div></section>
+

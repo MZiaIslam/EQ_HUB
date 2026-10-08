@@ -1,0 +1,104 @@
+﻿@using EHUB.Utilities
+
+@{
+	ViewData["Title"] = "RW Request Approvals";
+	ViewData["pgHeader"] = "Pending Approvals";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+	.btnsh {
+		opacity: 0;
+	}
+
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+	.ft16{font-size:14px;}
+</style>
+<section class="content">
+	<div class="card">
+		
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-12">
+				
+							<table class="table table-striped table-hover" id="tbleaves">
+								<thead>
+									<tr>
+										<th>Request Date</th>
+										<th>Staff Name</th>
+										<th>RW Date</th>
+										<th>IN Time - OUT Time </th>
+										
+										<th>Status</th>
+										<th>Description</th>
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var item in Model)
+									{
+										<tr>
+											<td>@item.Created.ToString("dd MMM yyyy")</td>
+											<td>@item.eName</td>
+
+                                    <td>@item.dtFrom.ToString("dd MMM yyyy")</td>
+                                   
+											<td>@item.lvduration</td>
+											<td title="@item.Mgr">
+												@{
+													if (item.aprvstatus == "To Approve")
+													{
+														<span class="badge bg-primary ft16">To Approve</span>
+													}
+													else if (item.aprvstatus == "Approved")
+													{
+														<span class="badge bg-success ft16">Approved</span>
+													}
+													else if (item.aprvstatus == "Refused")
+													{
+														<span class="badge bg-danger ft16">Refused</span>
+													}
+												}
+									
+											</td>
+											<td>
+												@{
+													if (item.attachment != null)
+													{
+												<a href='~/dist/img/StaffData/RWRequest/@item.id/@item.attachment' target="_blank"><i class='fa-solid fa-paperclip'></i></a>
+													}
+												}
+												@item.Ldesc
+												<span class="btnsh float-right">
+
+													@* @if (chk == "f")
+													{ *@
+												<a class="btn btn-outline-danger btn-xs" asp-controller="Attendance" asp-action="Refuse" asp-route-id="@item.id"><i class="fa-solid fa-times"></i> Refuse</a>
+													@* } *@
+											<a class="btn btn-outline-success btn-xs" asp-controller="Attendance" asp-action="Approve" asp-route-id="@item.id"><i class="fa-solid fa-thumbs-up fa-beat"></i> Approve</a>
+												</span>
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<script type="text/javascript">
+
+	$(document).ready(function () {
+	
+		$(function () {
+			$("#tbleaves").DataTable({
+				"ordering": true,
+				"responsive": true,
+			})
+		});
+	});
+</script>

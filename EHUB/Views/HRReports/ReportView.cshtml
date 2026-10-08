@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "My Reports";
+    ViewData["pgHeader"] = "Report Viewer";
+}
+<style type="text/css">
+
+
+    .btn-group button,select {
+        opacity: 0;
+    }
+
+    .btn-group:hover button, .btn-group:hover select {
+        opacity: 1;
+    }
+ 
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-10" id="txtTitle">
+                    <h4>Report Title</h4>
+             </div>
+             <div class="col-md-2">
+                    <div class="btn-group float-right">
+                        <button type="button" id="btndash" class="btn" title="Make this my dashboard">
+                            <i class="fas fa-poll"></i>
+                        </button>
+                        <button id="btnsv" type="button" class="btn btn-default" title="Save changes to the report">
+                            <i class="fas fa-save"></i>
+                        </button>
+                        <button type="button" id="btnprtP" class="btn btn-default">
+                            <i class="fa-solid fa-print"></i>
+                        </button>
+                        <button type="button" id="btndel" class="btn btn-default" title="Delete Report">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+             </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <div id="dtlD" class="row"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+
+@*     <script src="dist/highcharts.js"></script>
+    <script src="dist/jquery.highchartTable.js"></script> *@
+<script src="~/plugins/reportview/ReportView.js"></script>
+    <script type="text/javascript">
+        $(document).keypress(function (e) {
+            if (e.keyCode === 13) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        $(document).ready(function () {
+        });
+    </script>
+

@@ -1,0 +1,129 @@
+﻿@using EHUB.Utilities
+@using System.Data
+
+@{
+	ViewData["Title"] = "Locations";
+	ViewData["pgHeader"] = "Add/Modify Locations";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+	.btnsh {
+		opacity: 0;
+	}
+
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+</style>
+
+<section class="content">
+	@if (chk != "r" || chk != "")
+	{
+		<div class="col-md-6" style="margin-bottom: 10px;">
+			<a id="btnAdd" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Location</a>
+		</div>
+	}
+	<div class="card">
+
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-12">
+					<table id="tbLoc" class="table table-hover table-striped table-sm">
+						<thead>
+							<tr>
+								
+								<th>Location</th>
+                                <th>Parent Location</th>
+						
+							
+							
+
+							</tr>
+						</thead>
+						<tbody id="tblLoc">
+							 @foreach (DataRow item in Model[1])
+							{
+								<tr>
+									<td>@item["Loc"]</td>
+									<td>@item["prov"]
+										<span class="btnsh">
+
+											@if (chk == "f")
+											{
+												<a onclick="Edit('@item["Loc"]','@item["pLocId"]',@item["LocId"])" class="btn btn-outline-danger btn-xs float-right"><i class="fa-solid fa-pen"></i> Edit</a>
+											}
+
+										</span>
+									</td>
+								</tr>
+							}
+						</tbody>
+
+					</table>
+				</div></div></div></div>
+	</section>
+<div class="modal fade" id="dgAdd" style="display: none;">
+	<div class="modal-dialog modal-sm">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Add/Modify Location</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<form id="frmAdd" class="" method="post" asp-controller="Administration" asp-action="Locations" enctype="multipart/form-data">
+				<div class="modal-body table-responsive">
+					<div class="row">
+
+
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-md-12">
+									<input type="hidden" value="0" id="LocId" name="LocId" class="frm" />
+									<label>Location</label>
+									<input type="text" class="form-control frm" name="Loc" />
+								</div>
+
+								<div class="col-md-12">
+									<label for="">Province</label>
+									<select name="pLocId" id="pLocId" class="form-control select2" style="width:100%">
+										@foreach (var item in Model[0])
+										{
+											<option value="@item["LocId"]">@item["Loc"]</option>
+										}
+									</select>
+								</div>
+							
+
+							
+
+							
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$('#btnAdd').on('click', function () {
+		$('.frm').val('');
+		$('#dgAdd').modal("show");
+	});
+	function Edit(Loc, pLocId, LocId) {
+		$('.frm').val('');
+		$('[name=LocId]').val(LocId);
+		$('[name=Loc]').val(Loc);
+
+		$('#pLocId').val(pLocId).trigger('change');
+		$('#dgAdd').modal("show");
+	}
+</script>

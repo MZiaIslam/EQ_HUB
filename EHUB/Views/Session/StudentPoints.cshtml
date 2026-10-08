@@ -1,0 +1,64 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Student Points Report";
+    ViewData["pgHeader"] = "🎖️ Monthly Student Points";
+}
+<style type="text/css">
+    .select2-container--default .select2-results__group {
+        cursor: default;
+        display: block;
+        padding: 6px;
+        background: #e5e5e5;
+        color: #2a327d;
+    }
+    .btnsh {
+        opacity: 0;
+    }
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+    .select2-container {
+        width: 100% !important;
+    }
+    .text-end {
+        text-align: right;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <input type="month" class="form-control" id="rMonth" style="max-width: 172px;" />
+            <br>
+            <table class="table-striped table table-sm align-middle mb-0" id="tblPoints">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Student</th>
+                        <th class="text-end">Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    document.getElementById("rMonth").addEventListener("change", function () {
+        fetch(`/Session/GetStudentPoints?month=${this.value}`)
+            .then(response => response.json())
+            .then(data => {
+                let tbody = document.querySelector("#tblPoints tbody");
+                tbody.innerHTML = "";
+                data.forEach(js => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${js.Pos}</td>
+                            <td>${js.StudentName} (${js.Guardian} - ${js.Relationship})</td>
+                            <td class="text-end">${js.pt}</td>
+                        </tr>`;
+                });
+            });
+    });
+</script>

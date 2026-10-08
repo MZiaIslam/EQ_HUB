@@ -1,0 +1,84 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Profit Report";
+    ViewData["pgHeader"] = "📈 Income & Expenses";
+}
+<style type="text/css">
+    .select2-container--default .select2-results__group {
+        cursor: default;
+        display: block;
+        padding: 6px;
+        background: #e5e5e5;
+        color: #2a327d;
+    }
+
+    .btnsh {
+        opacity: 0;
+    }
+
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .text-end {
+        text-align: right;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <input type="month" class="form-control" id="rMonth" style="max-width: 172px;" />
+            <br>
+            <table class="table-striped table table-sm align-middle mb-0" id="expensesTable">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th class="text-end">Income</th>
+                        <th class="text-end">Expenses</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+                <tfoot></tfoot>
+            </table>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    document.getElementById("rMonth").addEventListener("change", function () {
+        fetch(`/Session/GetIncomeVsExp?month=${this.value}`)
+            .then(response => response.json())
+            .then(data => {
+                let tbody = document.querySelector("#expensesTable tbody");
+                let tfoot = document.querySelector("#expensesTable tfoot");
+                let dr=0, cr=0;
+                tbody.innerHTML = "";
+                data.forEach(exp => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${exp.PayDate.split('T')[0]}</td>
+                            <td>${exp.Descs}</td>
+                            <td class="text-end">${exp.Dr}</td>
+                            <td class="text-end">${exp.Cr ?? ''}</td>
+                        </tr>`;
+                        dr+=exp.Dr;
+                        cr+=exp.Cr;
+                });
+                tfoot.innerHTML =   `<tr>
+                <th>Totals</th>
+                <th></th>
+                <th class="text-end">${dr.toFixed(2)}</th>
+                <th class="text-end">${cr.toFixed(2)}</th>
+                </tr>`;
+                    tfoot.innerHTML +=   `<tr style="font-size: large;">
+                <th colspan="2">Profit/Loss</th>
+                <th colspan="2" class="text-end">${(dr-cr).toFixed(2)}</th>
+                </tr>`;
+            });
+    });
+</script>

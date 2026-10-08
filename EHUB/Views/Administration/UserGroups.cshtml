@@ -1,0 +1,213 @@
+﻿@using EHUB.Utilities
+@using Newtonsoft.Json
+@{
+	ViewData["Title"] = "User Groups & Roles";
+	ViewData["pgHeader"] = "User Group Management";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+.rt-rd{
+		float: right !important;
+		margin-top: -4px;
+		margin-right: 8px;
+}
+
+	label:not(.form-check-label):not(.custom-file-label) {
+		font-weight: normal;
+	}
+
+	.btnsh {
+		opacity: 0;
+	}
+
+	.nav-item:hover .btnsh {
+		opacity: 1;
+		display: inline;
+	}
+
+	.info-box-content:hover .btnsh {
+		opacity: 1;
+		display: inline;
+	}
+
+	.grpbox .active > .info-box-icon {
+		background-color: #2a327d !important;
+	}
+
+	.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+		color: #2a327d;
+		background-color: #dee2e6;
+	}
+</style>
+<div class="row wrapper">
+	<div class="col-md-12" style="
+    padding: 0px 24px 24px 24px;
+">
+		<div class="row">
+			<div class="col-md-12">
+				@if (chk != "r" || chk != "")
+				{
+					<a  id="btnAddG" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Add New Group</a>
+				}
+			</div>
+					<div class="col-md-12" style="border: solid 1px;margin: 15px;color: aliceblue;">
+			<div class="clearfix">
+			</div>
+			</div>
+			<div class="col-md-3">
+				
+				@foreach (var item in Model)
+					{
+
+				<div class="col-md-12 grpbox">
+						<div class="info-box grp" onclick="loadModules(@item.GroupID);$(this).addClass('active');">
+							<span class="info-box-icon bg-info"><i class="fas fa-users"></i></span>
+
+						<div class="info-box-content">
+						
+								<span>
+									@item.GroupName
+
+								</span>
+
+						
+								<span class="btnsh">
+
+									@if (chk == "f")
+									{
+										<a onclick="DelGrp(@item.GroupID)" class="btn-del btn btn-outline-danger btn-xs float-right" style="margin-left: 5px;"><i class="fa-solid fa-times"></i> Remove</a>
+										<a r-data="@(JsonConvert.SerializeObject(item))" class="btn-grp btn btn-outline-success btn-xs float-right"><i class="fa-solid fa-pen"></i> Edit</a>
+									
+									}
+
+								</span>
+						</div>
+					
+					</div>
+			
+				</div>
+
+					}
+
+		
+		
+			</div>
+			<div style="width: 1%;height: 12px;"></div>
+
+			<div class="col-md-8">
+				<ul id="dvList" class="nav nav-pills nav-sidebar flex-column nav-flat nav-child-indent"></ul>
+				
+			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="dgGrp" style="display: none;">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">ADD NEW GROUP</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<form id="frmGrp" >
+				<div class="modal-body table-responsive">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="form-group">
+								<label for="text">
+									Group Title
+								</label>
+								<input type="hidden" value="0" id="grpID" name="GroupID" class="frm" />
+								<input type="text" name="GroupName" class="form-control frm" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button id="btnAddGrp" onclick="SaveGrp();" tag="0" type="button" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$(document).ready(function () {
+		// loadModules(1);
+	});
+	$('#btnAddG').on('click', function () {
+		$('.frm').val('');
+		$('#dgGrp').modal("show");
+	});
+	function SaveGrp() {
+		$.post("/Administration/SaveGroup", $("#frmGrp").serialize()).done(function (data) {
+			location.href = "";
+		});
+	}
+		function DelGrp(id){
+				Swal.fire({
+			title: "Are you sure?",
+			text: "You won't be able to revert this!",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "Yes, delete it!"
+		}).then((result) => {
+			if (result.isConfirmed) {
+				$.get("/Administration/DelGroup?id=" + id).done(function (data) {
+				   
+					Swal.fire({
+						title: "Deleted!",
+						text: "Record has been deleted.",
+						icon: "success"
+					});
+				});
+			}
+		});
+	}
+	$(document.body).on("click", ".btn-grp", function () {
+		$('.frm').val('');
+		let rdata = JSON.parse($(this).attr('r-data'));
+		$('[name=GroupName]').val(rdata.GroupName);
+
+		$('#grpID').val(rdata.GroupID);
+		$('#dgGrp').modal("show");
+	});
+	function loadModules(grp) {
+		$(".grp").removeClass("active");
+		$.get("/Administration/ModuleList?grp=" + grp).done(function (obj) {
+			let lst = "";
+			for (const e of obj) {
+				if (e.pglavel == 1) {
+					lst += '<li class="nav-item menu-is-opening menu-open"><span class="nav-link active"><i class="nav-icon fas ' + e.icon + '"></i><p>' + e.pgname + '</p></span><ul class="nav nav-treeview">';
+					let pid = e.pgid;
+					for (const s of obj) {
+						if (s.pglavel==pid) {
+							lst += '<li class="nav-item"><span  class="nav-link opt-act">'+
+								'<span class="btnsh rt-rd"><div class="custom-control custom-radio rt-rd"><input onclick="SetRole(' + grp + ',' + s.pgid + ',' + s.tblid + ',1);" id="' + s.pgid + 'ardo' + s.tblid + '" class="custom-control-input" type="radio" ' + (s.roleid == 1 ? "checked" : "") + ' name="customRadio' + s.pgid + '"><label for="' + s.pgid + 'ardo' + s.tblid + '" class="custom-control-label">Read Only</label></div>' + ''
+								+ '<div class="custom-control custom-radio rt-rd"><input onclick="SetRole(' + grp + ',' + s.pgid + ',' + s.tblid + ',3);" id="' + s.pgid + 'brdo' + s.tblid + '" class="custom-control-input" type="radio" ' + (s.roleid == 3 ? "checked" : "") + ' name="customRadio' + s.pgid + '"><label for="' + s.pgid + 'brdo' + s.tblid + '" class="custom-control-label">Full Access</label></div>' + ''
+								+ '<div class="custom-control custom-radio rt-rd"><input onclick="SetRole(' + grp + ',' + s.pgid + ',' + s.tblid + ',2);" id="' + s.pgid + 'crdo' + s.tblid + '" class="custom-control-input" type="radio" ' + (s.roleid == 2 ? "checked" : "") + ' name="customRadio' + s.pgid + '"><label for="' + s.pgid + 'crdo' + s.tblid + '" class="custom-control-label">Read/Write</label></div>' + ''
+								+ '<div class="custom-control custom-radio rt-rd"><input onclick="SetRole(' + grp + ',' + s.pgid + ',' + s.tblid + ',0);" id="' + s.pgid + 'drdo' + s.tblid + '" class="custom-control-input custom-control-input-danger" type="radio" ' + (s.roleid == 0 ? "checked" : "") + ' name="customRadio' + s.pgid + '"><label for="' + s.pgid + 'drdo' + s.tblid + '" class="custom-control-label">Disabled</label></div></span>'
+							+'<i class="fas ' + s.icon + ' nav-icon"></i><p>' + s.pgname + '</li>';
+						}
+					}
+					lst += "</ul></li>";
+				}
+				
+
+
+				
+	
+			}
+			$("#dvList").html(lst);
+			});
+	}
+	function SetRole(grp,pgid,tblid,role) {
+		$.get("/Administration/SetRole?grp="+grp+"&pgid="+pgid+"&tblid="+tblid+"&role="+role).done(function (data) {
+		
+		});
+	}
+</script>

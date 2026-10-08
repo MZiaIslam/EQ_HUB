@@ -1,0 +1,278 @@
+﻿@using Newtonsoft.Json
+@{
+	ViewData["Title"] = "Billing & Payments";
+	ViewData["pgHeader"] = "🧾 Billing/Payments for Session";
+}
+<style type="text/css">
+	.select2-container--default .select2-results__group {
+		cursor: default;
+		display: block;
+		padding: 6px;
+		background: #e5e5e5;
+		color: #2a327d;
+	}
+
+	.btnsh {
+		opacity: 0;
+	}
+
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+
+	.select2-container {
+		width: 100% !important;
+	}
+</style>
+<section class="content">
+	<div class="card">
+		<div class="card-body">
+			<form asp-controller="Session" asp-action="BillingPayments" enctype="multipart/form-data" method="post" onsubmit="onsubmit()">
+				<div class="row">
+					<div class="col-md-4">
+						<label>Student</label>
+						<select class="form-control select2" asp-items="Model.stuList" name="StudentID" id="StudentID" onchange="window.location.href='?id=' + this.value;">
+							<option value="0"> - select a student - </option>
+						</select>
+					</div>
+					<div class="col-md-12">
+						<div class="row" style="padding-top: 10px;" id="staffcard">
+						</div>
+					</div>
+					<div class="col-md-12 shref">
+						<br />
+						<button id="btnInvoice" type="button" data-toggle="modal" class="btn btn-primary"><i class="fa-solid fa-file-invoice"></i> Create Invoice</button>
+					</div>
+					<div class="col-md-7">
+						<br />
+						<div class="card card-default">
+							<div class="card-body" style="display: block;">
+								<table id="tblPayments" class="table table-striped table-sm table-hover">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Description</th>
+											<th>Amount ($)</th>
+											<th>Paid ($)</th>
+											<th>Status</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody id="tbPayLines">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-5">
+						<br />
+						<div class="card card-default">
+							<div class="card-body" style="display: block;">
+								<table id="tblStaff" class="table table-striped table-sm table-hover">
+									<thead>
+										<tr>
+											<th>Date</th>
+											<th>Timings</th>
+											<th>Subjects</th>
+											<th>Tutor</th>
+										</tr>
+									</thead>
+									<tbody id="tbSchLines">
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal" id="dgPayment" style="display: none;">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">INVOICE</h5>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+									<span aria-hidden="true">&times;</span>
+								</button>
+							</div>
+							<div class="modal-body">
+								<div class="row">
+									<div class="col-md-6">
+										<input type="number" id="nID" name="nID" hidden>
+										<label for="">Date</label>
+										<input name="PayDate" type="date" class="form-control frm" required>
+									</div>
+									<div class="col-md-3">
+										<label for="">Amount</label>
+										<input name="PayAmt" id="PayAmt" type="number" step="0.01" class="form-control frm" required>
+									</div>
+									<div class="col-md-3">
+										<label for="">HST 13%</label><div class="input-group">
+											<div class="input-group-prepend">
+												<span class="input-group-text">
+													<input type="checkbox" name="chkHST" id="chkHST">
+												</span>
+											</div>
+											<input name="HST" id="HST" type="number" step="0.01" class="form-control frm">
+										</div>
+									</div>
+									<div class="col-md-12">
+										<label for="">Description</label><br />
+										<input name="Descs" type="text" class="form-control frm">
+									</div>
+									<div class="col-md-5 paid">
+										<label for="">Payment Date</label>
+										<input name="dtPaid" type="date" class="form-control frm">
+									</div>
+									<div class="col-md-3 paid">
+										<label for="">Paid Amount</label>
+										<input name="PaidAmt" type="number" step="0.01" class="form-control frm">
+									</div>
+									<div class="col-md-4 paid" style="">
+										<label for="">Payment Mode</label>
+										<select class="form-control frm" name="payMode">
+											<option>Cash</option>
+											<option>Credit&nbsp;Card</option>
+											<option>eTransfer</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button id="btnSvPay" type="submit" class="btn btn-danger">Save Invoice</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+</section>
+<script type="text/javascript">
+		$('#btnInvoice').on('click', function () {
+		$('.frm').val('');
+		$("#nID").val("0");
+		if($("#nID").val()=="0"){
+			$(".paid").hide();
+		}
+		$('#dgPayment').modal("show");
+	});
+	 function getSchLines(){
+		 var studentId = '@ViewBag.StudentID';
+			$.get("/Session/SchLines?stuid=" + studentId).done(function (obj) {
+			$("#tbSchLines").html("");
+			let ln="";
+			for (const e of obj) {
+				console.log(e.startTime)
+			ln+=`<tr><td data-order="${e.startTime}">${moment(e.startTime).format("D MMM yyyy")}</td><td>${moment(e.startTime).format("h:mm A")} - ${moment(e.endTime).format("h:mm A")} (${e.sMin})</td><td>${e.subjects}</td><td>${e.tutor}</td></tr>`;
+			}
+			 $("#tbSchLines").html(ln);
+		$("#tblStaff").DataTable({
+			"ordering": true,
+			order: [[0, 'desc']],
+			"responsive": true,
+			columnDefs: [{targets: 0,type: 'date'}]
+		})
+			})};
+	 function getPayLines(){
+		 $("#tbPayLines").html("");
+		 var studentId = '@ViewBag.StudentID';
+			$.get("/Session/PayLines?stuid=" + studentId).done(function (obj) {
+			let ln="";
+			for (const e of obj) {
+			ln+=`<tr><td data-order="${e.payDate}">${moment(e.payDate).format("D MMM yyyy")}</td><td>${e.descs}</td><td>${e.payAmt+e.hst}</td><td>${e.paidAmt}</td><td>${e.stat}</td><td><div class="btnsh"><a r-data='${JSON.stringify(e)}' class="btn-work btn btn-outline-info btn-xs"><i class="fa-solid fa-edit fa-beat"></i> Edit</a><a class="btn btn-outline-danger btn-xs" onclick="RemovePay(${e.id},this)"><i class="fa-solid fa-remove"></i> Remove</a></div></td></tr>`;
+			}
+			 $("#tbPayLines").html(ln);
+		$("#tblPayments").DataTable({
+			"ordering": true,
+			order: [[0, 'desc']],
+			"responsive": true,
+			 columnDefs: [{targets: 5,width: "130px"},{targets: 0,type: 'date'}]
+		});
+			})};
+	function getProfile(){
+		 var studentId = '@ViewBag.StudentID';
+			$.get("/Session/Profile?stuid=" + studentId).done(function (obj) {
+					$("#staffcard").html("");
+					$(".shref").hide();
+					for (const e of obj) {
+							let tt=`<div class="col-md-6"><div style="float: left;"><img src="/dist/img/StudentData/pics/${e.studentID}.png" onerror="this.onerror=null;this.src=\'/dist/img/StaffData/pics/usr.png\';" alt="User Image" style="width: 80px;"></div><div style="margin-left: 90px;"><h6 ><i class="fas fa-clipboard-user"></i><b> ${e.studentName}</b></h6><span  style="font-weight: 600;">${e.guardian}</span><span class="product-description"> (${e.relationship})</span><p>${e.email}</p></div></div><div class="col-md-6">
+							<span><strong>Grade Level:</strong> ${e.gradeLevel}</span><br><span><strong>Phone Number:</strong> ${e.cellNo}</span><br>
+	<span><strong>Date of Birth:</strong> ${e.dob}</span><br><span><strong>School Attended:</strong> ${e.school}</span>
+						</div><div class="col-md-6">
+							<span><strong>Subjects of Interest:</strong> ${e.subjects}</span><br>
+	<span><strong>Current Academic Performance:</strong> ${e.acadPerformance}</span><br><span><strong>Learning Goals:</strong> ${e.learningGoals}</span>
+						</div><div class="col-md-6">
+							<span><strong>Preferred Tutoring Format:</strong> ${e.tutoringFormat}</span><br>
+	<span><strong>Preferred Schedule:</strong> ${e.preferredSchedule}</span><br><span><strong>Preferred Frequency:</strong> ${e.sessionsFrequency}</span><br>
+	<span><strong>Learning Disabilities:</strong> ${e.healthConcerns}</span>
+						</div><div class="col-md-6"><br><span><strong>Total Hours Purchased:</strong> ${e.purchasedHrs}</span><br><span><strong>Total Amount:</strong> ${e.totalAmt}</span></div>`;
+	$("#staffcard").html(tt);
+		$("#GradeID").val(e.gradeID);
+		$(".shref").show();
+					}
+				});
+	}
+	$(document).ready(function () {
+		$(document.body).on("click", ".btn-work", function () {
+			$('.frm').val('');
+			let rdata = JSON.parse($(this).attr('r-data'));
+			$('[name=PayDate]').val(moment(rdata.payDate).format("yyyy-MM-DD"));
+			$('[name=PayAmt]').val(rdata.payAmt);
+			$('[name=Descs]').val(rdata.descs);
+			$('[name=dtPaid]').val(moment(rdata.dtPaid).format("yyyy-MM-DD"));
+			$('[name=PaidAmt]').val(rdata.paidAmt);
+			$('[name=payMode]').val(rdata.payMode);
+			 $('[name=HST]').val(rdata.hst);
+			$('#nID').val(rdata.id);
+			if(rdata.hst==0){
+				$("#chkHST").prop("checked",false);
+			}else{
+				$("#chkHST").prop("checked",true);
+			}
+			 $(".paid").show();
+			$('#dgPayment').modal("show");
+		});
+		var studentId = '@ViewBag.StudentID';
+		// if (studentId && studentId !== '0') {$('#StudentID').val(studentId).trigger('change');}
+		if(studentId =="0"){$(".shref").hide();}
+		else{getProfile();getSchLines();getPayLines();}
+	// $(document).on("change", "#StudentID", function (e) {
+	// 	getProfile();
+	// 	getSchLines();getPayLines();
+	// });
+	$(document.body).on("click", "#chkHST", function () {
+	if($(this).prop("checked")) {
+				// Remove readonly
+				$("#HST").prop("readonly", false);
+				// Get amount and calculate 13%
+				let amount = parseFloat($("#PayAmt").val()) || 0;
+				let tax = (amount * 13) / 100;
+				$("#HST").val(tax.toFixed(2));
+			} else {
+				// Make readonly and clear value
+				$("#HST").prop("readonly", true).val("0");
+			}
+	});
+	});
+	 function RemovePay(id,btn) {
+		Swal.fire({
+			title: "Are you sure?",
+			text: "You won't be able to revert this!",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "Yes, delete it!"
+		}).then((result) => {
+			if (result.isConfirmed) {
+				$.get("/Session/RemovePay?id=" + id).done(function (data) {
+					btn.closest("tr").remove();
+					Swal.fire({
+						title: "Deleted!",
+						text: "Record has been deleted.",
+						icon: "success"
+					});
+				});
+			}
+		});
+	}
+</script>

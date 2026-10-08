@@ -1,0 +1,121 @@
+﻿@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Daily Expenses";
+    ViewData["pgHeader"] = "🧾 Daily Expenses";
+}
+<style type="text/css">
+    .select2-container--default .select2-results__group {
+        cursor: default;
+        display: block;
+        padding: 6px;
+        background: #e5e5e5;
+        color: #2a327d;
+    }
+
+    .btnsh {
+        opacity: 0;
+    }
+
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <button class="btn btn-primary" onclick="openExpenseModal(0)">
+                <i class="fas fa-plus"></i> Add Expense
+            </button>
+            <br> <br>
+            <table class="table-striped table table-sm align-middle mb-0" id="tblExp">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Payment Method</th>
+                        <th>Notes</th>
+                        <th>Receipt</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td data-order="@item.Date">@item.Date.ToShortDateString()</td>
+                            <td>@item.Category</td>
+                            <td>@item.Amount</td>
+                            <td>@item.PaymentMethod</td>
+                            <td>@item.Notes</td>
+                            <td>@item.ReceiptNo</td>
+                            <td>
+                                <button class="btn btn-xs btn-warning" onclick="openExpenseModal(@item.Id)">Edit</button>
+                                |
+                                <a class="btn btn-xs btn-danger" onclick="RemoveExp(@item.Id,this)"><i class="fa-solid fa-remove"></i> Remove</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="expenseModal" style="display: none;" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Expense</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="expenseModalBody">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    function openExpenseModal(id) {
+        var url = '/Session/' + (id === 0 ? 'ExpenseCreate' : 'ExpenseEdit/' + id);
+        $("#expenseModalBody").load(url, function () {
+            $("#expenseModal").modal("show");
+            $.validator.unobtrusive.parse("#expenseForm");
+        });
+    }
+     function RemoveExp(id,btn) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.get("/Session/ExpenseDel?id=" + id).done(function (data) {
+                    btn.closest("tr").remove();
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: "Record has been deleted.",
+                        icon: "success"
+                    });
+                });
+            }
+        });
+    }
+    				 $(function () {
+		$("#tblExp").DataTable({
+			"ordering": true,
+            order: [[0, 'desc']],
+			"responsive": true,
+			columnDefs: [{targets: 0,type: 'date'}]
+		})
+	});
+</script>

@@ -1,0 +1,545 @@
+﻿@using EHUB.Utilities
+@{
+	ViewData["Title"] = "Dashboard";
+	var roleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+				 ?? User.FindFirst("RoleId")?.Value;
+	var chkAdm = roleClaim != "18" && roleClaim != "19";
+}
+<style>
+	/* Base Controls & Layout */
+	.controls {
+		margin: 6px 0 6px 4px;
+		float: right;
+		padding-right: 3px;
+	}
+	.calendar, .day-view {
+		display: none;
+	}
+		.calendar.active, .day-view.active {
+			display: block;
+		}
+	/* Global Table Styling */
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		table-layout: auto;
+	}
+	th, td {
+		border: 1px solid #ddd;
+		padding: 10px;
+		text-align: center;
+		position: relative;
+	}
+		td:nth-child(even) {
+			background-color: #fafafa;
+		}
+		td:nth-child(odd) {
+			background-color: #ffffff;
+		}
+	/* Day View & Events */
+	.day-view .event-list {
+		list-style: none;
+		padding: 0;
+	}
+		.day-view .event-list li {
+			padding: 5px;
+			border: 1px solid #ddd;
+			margin: 5px 0;
+			background: lightblue;
+		}
+	.event-list li:hover .btnsh {
+		opacity: 1;
+		display: inline;
+	}
+	.btnsh {
+		opacity: 0;
+	}
+	.view-header-title {
+		font-size: 22px;
+		font-variant-caps: petite-caps;
+		color: #2a327d;
+		text-shadow: 0 0 10px #2a74b6;
+		padding-left: 4px;
+	}
+	.small-input-group .input-group-text, .small-input-group .form-control {
+		font-size: 12px;
+		height: 28px;
+		padding: 2px 6px;
+	}
+	.day-number {
+		background-color: #2a327d;
+		color: #fff;
+		box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		font-size: 0.85rem;
+		font-weight: 600;
+		margin-bottom: 6px;
+	}
+	/* Event Cards & Hover Animations */
+	.calendar-event {
+		background: #fff;
+		border-radius: 6px;
+		margin-bottom: 6px;
+		box-shadow: 0 1px 2px rgba(0,0,0,.05);
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		overflow: hidden;
+		text-align: left;
+	}
+		.calendar-event.is-cancelled {
+			background-size: 86px;
+			background-position: right bottom;
+			background-image: url('/dist/img/cancel.svg');
+			background-repeat: no-repeat;
+		}
+		.calendar-event .feedback-btn {
+			max-height: 0;
+			opacity: 0.4;
+			display: inline-block;
+			overflow: hidden;
+			transform: translateY(-8px);
+			transition: max-height 0.3s ease, opacity 0.25s ease, transform 0.3s ease;
+			padding: 2px 6px;
+			border-radius: 4px;
+			color: #fff;
+			font-size: .7rem;
+			font-weight: 500;
+			text-decoration: none;
+		}
+		.calendar-event:hover .feedback-btn {
+			max-height: 40px;
+			opacity: 1;
+			transform: translateY(0);
+		}
+		.calendar-event .btn-div {
+			height: 0;
+			padding-bottom: 8px;
+		}
+		.calendar-event:hover .btn-div {
+			margin-top: 5px;
+			height: auto;
+			padding-bottom: 0;
+		}
+	/* Responsive Agenda View */
+	.calendar-desktop {
+		display: block;
+	}
+	.mobile-agenda {
+		display: none;
+	}
+	@@media (max-width: 767px) {
+		.calendar-desktop {
+			display: none;
+		}
+		.mobile-agenda {
+			display: block;
+			width: 100%;
+		}
+		.agenda-week {
+			margin-bottom: 8px;
+			border-radius: 6px;
+			overflow: hidden;
+		}
+		.agenda-week-header, .calendar-week-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 6px 9px;
+			background: #f8fafc;
+			border: 1px solid #e2e8f0;
+			border-radius: 5px;
+			color: #475569;
+			font-size: .72rem;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.agenda-day {
+			padding: 6px 0;
+			border-bottom: 1px solid #e2e8f0;
+		}
+		.agenda-date {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			margin-bottom: 5px;
+			padding: 0 5px;
+			color: #475569;
+			font-size: .72rem;
+			font-weight: 600;
+		}
+			.agenda-date.today {
+				color: #82b74b;
+			}
+		.agenda-event {
+			margin: 3px 5px;
+		}
+		.agenda-empty {
+			padding: 4px 8px;
+			color: #94a3b8;
+			font-size: .65rem;
+		}
+	}
+	.calendar-day {
+		padding: 5px !important;
+	}
+</style>
+<section class="content">
+	<div class="card bg-transparent shadow-none">
+		<div class="card-body p-0">
+			<div class="row">
+				@if (chkAdm)
+				{
+					<div class="col-md-3">
+						<div class="card-tools w-100 p-1">
+							<div class="input-group small-input-group">
+								<div class="input-group-prepend"><span class="input-group-text">Tutor</span></div>
+								<select class="form-control" id="cboEmp" asp-items="Model.emps">
+									<option value="0">ALL</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				}
+				<div class="col-md-3">
+					<div class="card-tools p-1" style="max-width: 185px;">
+						<div class="input-group small-input-group">
+							<div class="input-group-prepend"><span class="input-group-text">Month</span></div>
+							<input type="month" id="dtMonth" name="dtMonth" value="@DateTime.Now.ToString("yyyy-MM")" class="form-control" required />
+						</div>
+					</div>
+				</div>
+				<div class="col-md-@(chkAdm ? "6" : "9")">
+					<div class="controls">
+						<button onclick="showView('month')" class="btn btn-xs btn-primary">Month View</button>
+						<button onclick="showView('day')" class="btn btn-xs btn-primary">Day View</button>
+					</div>
+				</div>
+			</div>
+			<!-- Day View -->
+			<div id="dayView" class="day-view">
+				<div class="view-header-title">Day Schedule</div>
+				<ul id="eventList" class="event-list"></ul>
+			</div>
+			<!-- Month View -->
+			<div id="monthView" class="calendar active">
+				<div class="view-header-title">Monthly Calendar</div>
+				<div class="calendar-desktop">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>SUN</th>
+								<th>MON</th>
+								<th>TUE</th>
+								<th>WED</th>
+								<th>THU</th>
+								<th>FRI</th>
+								<th>SAT</th>
+							</tr>
+						</thead>
+						<tbody id="calendarBody"></tbody>
+					</table>
+				</div>
+				<div id="mobileAgenda" class="mobile-agenda"></div>
+			</div>
+			@if (chkAdm)
+			{
+				<div class="row">
+					<div class="col-md-12">
+						<div class="card card-default">
+							<div class="card-header text-white" style="background: #2a327d; padding: 6px 10px;">
+								<h3 class="card-title">Invoices Month wise</h3>
+								<div class="card-tools">
+									<button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+								</div>
+							</div>
+							<div class="card-body p-0">
+								<div class="row"><div class="col-md-12" id="dvInvoices"></div></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+			<div id="dtlD" class="row charts"></div>
+			@if (!chkAdm)
+			{
+				<div class="row">
+					<div class="col-md-12">
+						<div class="card card-default">
+							<div class="card-header text-white" style="background: #2a327d; padding: 6px 10px;">
+								<h3 class="card-title">Scheduled/Completed Hours</h3>
+								<div class="card-tools">
+									<button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+								</div>
+							</div>
+							<div class="card-body p-0">
+								<div class="row"><div class="col-md-12" id="tbHours"></div></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</section>
+<script src="~/plugins/reportview/data.js"></script>
+<script type="text/javascript">
+	const IS_ADMIN = @chkAdm.ToString().ToLower();
+	let events = [];
+	const PALETTE = [
+		"#0e84c2", "#82b74b", "#6366F1", "#ce17c0", "#F97316", "#14B8A6", "#0369A1",
+		"#3B82F6", "#804A00", "#EAB308", "#8B5CF6", "#311042", "#4B5563", "#97a325",
+		"#622569", "brown", "#009688", "#098519", "#673AB7", "#ff46ff", "#ff700a"
+	];
+	const STATUS_COLORS = {
+		Scheduled: "#007bff",
+		Completed: "#10B981",
+		Cancel: "#dc3545"
+	};
+	$(document).ready(function () {
+		refreshDashboard();
+		$("#dtMonth, #cboEmp").on('change', function () {
+			if ($.fn.DataTable.isDataTable('#tblInvoices')) {
+				$('#tblInvoices').DataTable().clear().destroy();
+			}
+			refreshDashboard();
+		});
+	});
+	function refreshDashboard() {
+		loadRpts();
+		getHours();
+		getInvoices();
+		ScheduledSessions();
+	}
+	function getHours() {
+		$.get("/home/getHours?month=" + $("#dtMonth").val(), response => {
+			if (response) $("#tbHours").html(response);
+		});
+	}
+	function getInvoices() {
+		$.get("/home/getInvoices?month=" + $("#dtMonth").val(), response => {
+			if (response) {
+				$("#dvInvoices").html(response);
+				if (typeof sumTable === 'function') sumTable('tblInvoices');
+			}
+		});
+	}
+	function loadRpts() {
+		$.get("/home/rptDash", response => {
+			if (!response) {
+				$('.charts').hide();
+				return;
+			}
+			const sections = response.split('¦').filter(Boolean);
+			const html = sections.map(sec => {
+				const parts = sec.split('|');
+				loadReportSection(parts);
+				return `<div class='dtlD ${parts[13]}'>
+					<h6 id='t${parts[10]}' class='tRpt text-center text-white' style='background:#2a327d; padding:4px 0;'>${decodeURIComponent(parts[3])}</h6>
+					<div id='c${parts[10]}' class='chrt' style='margin-top:2px;'></div>
+				</div>`;
+			}).join('');
+			$('#dtlD').html(html);
+		});
+	}
+	function loadReportSection(rptSec) {
+		const url = `/HRReports/ReportSection?info='${encodeURIComponent(`${rptSec[1]}','${rptSec[2]}','${rptSec[5]}':${rptSec[0]}:${rptSec[10]}`)}`;
+		$.get(url, responseText => {
+			const containerId = `#c${rptSec[10]}`;
+			$(containerId).html(responseText);
+			const tb = $(`#chrt-tb${rptSec[10]}`);
+			if (rptSec[11] === '1') configureHighchart(tb, rptSec);
+			else $(containerId).css('margin-left', '0px');
+			if (rptSec[10] !== '1015' && typeof sumTable === 'function') sumTable(`chrt-tb${rptSec[10]}`);
+			if (rptSec[6] === '0') tb.hide();
+			else formatNumericCells();
+			if ($.fn.DataTable && !$.fn.DataTable.isDataTable('#chrt-tb1015')) {
+				$("#chrt-tb1015").DataTable({ ordering: false, responsive: true, searching: false, paging: false, info: false, lengthChange: false });
+			}
+		});
+	}
+	function configureHighchart(tb, rptSec) {
+		const attrs = {
+			'data-graph-height': rptSec[12],
+			'data-graph-type': rptSec[9].replace('bar', 'column'),
+			'data-graph-container-before': '1'
+		};
+		if (rptSec[9] === "pie") {
+			attrs['data-graph-datalabels-enabled'] = '1';
+			$(`#chrt-tb${rptSec[10]} tbody tr`).each(function () {
+				$('td:nth-child(2)', this).attr('data-graph-name', $(':nth-child(1)', this).text());
+			});
+		}
+		if (rptSec[8] === '1') {
+			attrs['data-graph-inverted'] = '1';
+			attrs['data-graph-xaxis-labels-enabled'] = '1';
+		}
+		tb.attr(attrs).highchartTable();
+		$('defs').next().hide();
+		$(window).trigger('resize');
+	}
+	function formatNumericCells() {
+		$('.tb-css td').each(function () {
+			const $cell = $(this);
+			const text = $cell.text();
+			if ($.isNumeric(text)) {
+				$cell.html($.number(text, 2)).css('text-align', 'right');
+			}
+		});
+	}
+	function ScheduledSessions() {
+		const emp = IS_ADMIN ? $("#cboEmp").val() : 0;
+		$.get(`/home/ScheduledSessions?month=${$("#dtMonth").val()}&emp=${emp}`, responseText => {
+			if (!responseText) return;
+			events = JSON.parse(responseText);
+			loadCalendar();
+			loadDayView();
+		});
+	}
+	function showView(view) {
+		$('#dayView, #monthView').removeClass('active');
+		if (view === 'day') {
+			$('#dayView').addClass('active');
+			loadDayView();
+		} else {
+			$('#monthView').addClass('active');
+			loadCalendar();
+		}
+	}
+	function loadDayView() {
+		const $list = $("#eventList").empty();
+		const today = new Date().getDate();
+		const sortedEvents = events.slice().sort((a, b) => a.day - b.day || (a.startTime || "").localeCompare(b.startTime || ""));
+		sortedEvents.forEach(event => {
+			const statusClass = event.Stat === "Scheduled" ? "bg-primary" : event.Stat === "Completed" ? "bg-success" : event.Stat === "Cancel" ? "bg-danger" : "";
+			const blinkClass = today === parseInt(event.fday, 10) ? "blink" : "";
+			const $item = $(`
+				<li class="${statusClass} ${blinkClass}">
+					<strong>${event.fday} ${event.Timings} - ${escapeHtml(event.StudentName)}</strong>:
+					${escapeHtml(event.Guardian)} | Subject(s): ${escapeHtml(event.subjects)} | Tutor: ${escapeHtml(event.tutor)}
+					<a class="btn btnsh btn-info btn-xs float-right" href="home/Feedback/${event.Id}" onclick="Feedback(${event.Id},this)" style="margin-top:-1px;">📝 Feedback</a>
+				</li>
+			`);
+			$list.append($item);
+		});
+	}
+	function loadCalendar() {
+		const $calendarBody = $("#calendarBody").empty();
+		const $mobileAgenda = $("#mobileAgenda").empty();
+		const monthVal = $("#dtMonth").val();
+		if (!monthVal) return;
+		const [year, month] = monthVal.split("-").map(Number);
+		const date = new Date(year, month - 1, 1);
+		const today = new Date();
+		const firstDay = date.getDay();
+		const daysInMonth = new Date(year, month, 0).getDate();
+		let weekNumber = 1;
+		for (let startDay = 1 - firstDay; startDay <= daysInMonth; startDay += 7) {
+			const weekId = `week-${weekNumber}`;
+			// --- Desktop View Construction ---
+			const $weekHeader = $(`
+				<tr>
+					<td colspan="7" style="padding: 3px 0;">
+						<div class="calendar-week-header">
+							<span>Week ${weekNumber}</span>
+							<span id="desktop-${weekId}-icon" style="font-size:.65rem">▲</span>
+						</div>
+					</td>
+				</tr>
+			`);
+			const $row = $(`<tr id="desktop-${weekId}"></tr>`);
+			for (let i = 0; i < 7; i++) {
+				const day = startDay + i;
+				const $cell = $('<td class="calendar-day"></td>');
+				if (day >= 1 && day <= daysInMonth) {
+					if (today.getDate() === day && today.getMonth() === (month - 1) && today.getFullYear() === year) {
+						$cell.addClass("blink");
+					}
+					$cell.append(`<span class="day-number">${day}</span>`);
+					events.filter(e => e.day === day).forEach(e => $cell.append(createEventElement(e)));
+				}
+				$row.append($cell);
+			}
+			$calendarBody.append($weekHeader).append($row);
+			$weekHeader.find('.calendar-week-header').on('click', () => {
+				$row.toggle();
+				$(`#desktop-${weekId}-icon`).text($row.is(':visible') ? "▲" : "▼");
+			});
+			// --- Mobile View Construction ---
+			const $mobileWeek = $(`<div class="agenda-week"></div>`);
+			const $mobileHeader = $(`
+				<div class="agenda-week-header">
+					<span>Week ${weekNumber}</span>
+					<span id="mobile-${weekId}-icon">▲</span>
+				</div>
+			`);
+			const $mobileContent = $(`<div id="mobile-${weekId}"></div>`);
+			for (let i = 0; i < 7; i++) {
+				const day = startDay + i;
+				if (day < 1 || day > daysInMonth) continue;
+				const currentDate = new Date(year, month - 1, day);
+				const dayEvents = events.filter(e => e.day === day);
+				const isToday = today.getDate() === day && today.getMonth() === (month - 1) && today.getFullYear() === year;
+				const $dayContainer = $('<div class="agenda-day"></div>');
+				const dayName = currentDate.toLocaleDateString("en-US", { weekday: "short" });
+				$dayContainer.append(`<div class="agenda-date ${isToday ? 'today' : ''}"><span>${dayName}</span><span>${day}</span></div>`);
+				if (dayEvents.length > 0) {
+					dayEvents.forEach(e => $dayContainer.append($(createEventElement(e)).addClass("agenda-event")));
+				} else {
+					$dayContainer.append('<div class="agenda-empty">No sessions</div>');
+				}
+				$mobileContent.append($dayContainer);
+			}
+			$mobileWeek.append($mobileHeader).append($mobileContent);
+			$mobileAgenda.append($mobileWeek);
+			$mobileHeader.on('click', () => {
+				$mobileContent.toggle();
+				$(`#mobile-${weekId}-icon`).text($mobileContent.is(':visible') ? "▲" : "▼");
+			});
+			weekNumber++;
+		}
+	}
+	function createEventElement(event) {
+		const borderColor = STATUS_COLORS[event.Stat] || "#10B981";
+		const color = stringToColor(event.TutorID);
+		const isCancelled = event.Stat === "Cancel";
+		const $eventDiv = $(`<div class="calendar-event ${isCancelled ? 'is-cancelled' : ''}"></div>`);
+		$eventDiv.css("border-left", `4px solid ${borderColor}`);
+		$eventDiv.html(`
+			<div style="padding:5px 7px; background:${color}; color:#fff; font-size:.85rem; font-weight:500;">
+				${escapeHtml(event.StudentName)}
+			</div>
+			<div style="padding:5px 7px">
+				<div style="color:${color}; font-size:.85rem; font-weight:600;">
+					${escapeHtml(event.tutor)}
+					<small style="color:${color}; opacity:.75; font-size:.7rem; font-weight:500;">(${escapeHtml(event.subjects)})</small>
+				</div>
+				<div style="margin-top:3px; color:${color}; font-size:.65rem; font-weight:600;">
+					${escapeHtml(event.Timings)}
+				</div>
+				<div class="btn-div">
+					<a class="feedback-btn" href="home/Feedback/${event.Id}" onclick="Feedback(${event.Id},this)" title="Click to add feedback" style="background:${color};">
+						📝 Add Feedback
+					</a>
+				</div>
+			</div>
+		`);
+		return $eventDiv[0];
+	}
+	function stringToColor(id) {
+		const numericId = Math.abs(parseInt(id, 10)) || 0;
+		return PALETTE[(numericId % 20)+1];
+	}
+	function escapeHtml(str) {
+		if (!str) return '';
+		return String(str)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#039;");
+	}
+</script>

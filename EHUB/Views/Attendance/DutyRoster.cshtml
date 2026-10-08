@@ -1,0 +1,274 @@
+﻿@using EHUB.Utilities
+
+@{
+	ViewData["Title"] = "Duty Roster";
+	ViewData["pgHeader"] = "Staff Duty Roster";
+	AuthRights authRights = new AuthRights();
+	var chk = authRights.chk();
+}
+<style type="text/css">
+	.ft16 {
+		font-size: 14px;
+	}
+
+	.rd-opt {
+		float: left;
+		padding-right: 12px;
+	}
+
+	.select2-container--default .select2-results__group {
+		cursor: default;
+		display: block;
+		padding: 6px;
+		background: #e5e5e5;
+		color: #2a327d;
+	}
+
+	.btnsh {
+		opacity: 0;
+	}
+
+	tr:hover .btnsh {
+		opacity: 1;
+	}
+
+	#tbEmps_filter input{
+
+	}
+
+	#tbEmps_wrapper > div:nth-child(1) {
+		max-width:0 !important;
+	}
+</style>
+<section class="content">
+	@if (chk != "r" || chk != "")
+	{
+		<div class="col-md-6" style="margin-bottom: 10px;">
+			<a id="btnNewRoster" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Roster</a>
+		</div>
+	}
+	<div class="card">
+
+		<div class="card-body">
+			<div class="row">
+				<div class="col-md-4">
+			
+					<table id="tbEmps" class="table table-striped table-sm table-hover dataTable no-footer dtr-inline">
+						<thead>
+							<tr>
+								<th>Staff Code - Name</th>
+								
+
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var item in Model.staff)
+							{
+								<tr onclick="RosterLine(@item.empcode);"> <td style="cursor: pointer;">@item.empcode - @item.empname</td></tr>
+							}
+						</tbody>
+
+					</table>
+				</div>
+				<div class="col-md-8">
+				
+							<table id="tbroster" class="table table-striped table-md table-hover dataTable no-footer dtr-inline">
+								<thead>
+									<tr>
+										<th>Date From</th>
+										<th>Date To</th>
+										<th>In Time</th>
+										<th>Out Time</th>
+										<th width="50%">Created By</th>
+							
+									</tr>
+								</thead>
+						<tbody id="tblRoster"></tbody>
+
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+<div class="modal fade" id="dgRoster" style="display: none;">
+	<div class="modal-dialog modal-xl">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">DUTY ROSTER</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<form id="frmRoster" class="" method="post" asp-controller="Attendance" asp-action="DutyRoster" enctype="multipart/form-data">
+				<div class="modal-body table-responsive">
+					<div class="row">
+
+
+						<div class="col-md-12">
+							<div class="row">
+								<div class="col-sm-12">
+							
+									<div class="form-group clearfix">
+										<input type="hidden" id="Mode" name="mode" value="1" />
+										<div class="icheck-orange d-inline rd-opt">
+											<input type="radio" id="optDepart" name="optD" value="1" checked class="optMode">
+											<label for="optDepart">
+												By Department
+											</label>
+										</div>
+										<div class="icheck-orange d-inline rd-opt">
+											<input type="radio" id="optEmp" name="optD" value="2" class="optMode">
+											<label for="optEmp">
+												By Employees
+											</label>
+										</div>
+										
+									</div>
+								</div>
+					
+								<div class="col-md-12 staff" style="display: none;">
+									<label for="">Staff</label>
+									<select name="EmpIds[]" id="staffid" class="form-control select2" multiple="multiple" style="width:100%">
+										@foreach (var item in Model.staff)
+										{
+											<option value="@item.empid">@item.empcode - @item.empname</option>
+										}
+									</select>
+								</div>
+								<div class="col-md-12 depart">
+									<label for="">Department</label>
+								
+									<select name="DepartIds[]" id="departid" class="form-control select2" multiple="multiple" style="width:100%">
+										@foreach (var d in Model.departs)
+										{
+											<optgroup label="@d.Depart"></optgroup>
+											@foreach (var item in d.SubDepartments)
+											{
+												<option value="@item.DepartID">@item.Depart</option>
+											}
+										}
+									</select>
+								</div>
+						
+								<div class="col-md-12">
+									<div class="row">
+										<div class="col-md-2"><label>From Date</label>	<input type="date" id="dtFrom" name="fdate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required"></div>
+										<div class="col-md-2 todate"><label>To Date</label>	<input type="date" id="dtTo" name="tdate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required"></div>
+										<div class="col-md-2">
+											<label>Duration</label>
+											<span id="Duration" class="form-control"></span>
+										</div>
+									</div>
+								</div>
+								<div class="col-md-12">
+									<div class="row">
+										<div class="col-md-2"><label>In Time</label>	<input type="time"  name="intime" value="08:00" class="form-control" required="required"></div>
+										<div class="col-md-2"><label>Out Time</label>	<input type="time"  name="outtime" value="16:00" class="form-control" required="required"></div>
+										
+									</div>
+								</div>
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	function getNumberOfDays(start, end) {
+		const date1 = new Date(start);
+		const date2 = new Date(end);
+		// One day in milliseconds
+		const oneDay = 1000 * 60 * 60 * 24;
+		// Calculating the time difference between two dates
+		const diffInTime = date2.getTime() - date1.getTime();
+		// Calculating the number of days between two dates
+		const diffInDays = Math.round(diffInTime / oneDay);
+		return (diffInDays + 1) + " day(s)";
+	}
+	$(document).ready(function () {
+		$("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+
+		$(function () {
+			$("#tbroster").DataTable({
+				"ordering": false,
+				"responsive": true,
+			})
+			$('#tbEmps').DataTable({
+				// "bPaginate": false
+			});
+		});
+		$("#EmpId").on('change', function (e) {
+			RosterLine($("#EmpId").val());
+		});
+	});
+	$("#dtFrom, #dtTo").on('change', function (e) {
+		$("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+	});
+	$('#btnNewRoster').on('click', function () {
+		$('.frm').val('');
+		$('#dgRoster').modal("show");
+	});
+
+	$(".optMode").on('change', function (e) {
+		$("#Mode").val($(this).val());
+		if ($("#Mode").val() == "1") {
+			$(".staff").hide();
+			$(".depart").show();
+
+		}
+		else {
+			$(".staff").show();
+			$(".depart").hide();
+		}
+	});
+	function loadroster(obj) {
+		var rosters = ""
+		for (const e of obj) {
+			rosters += "<tr><td>" + e.fdate + "</td><td>" + e.tdate + "</td><td>" + e.intime + "</td><td>" + e.outtime + "</td><td title='" + (e.modifyby!=null?(e.modifyby + " @@ " + e.modify):"" )+ "'>" + e.createdby + " @@ " + e.created + "<span class='btnsh float-right'><a onclick='DelRoster(" + e.id + ")' class='btn btn-outline-danger btn-xs'><i class='fa-solid fa-trash fa-beat'></i> Delete</a></span></td></tr>";
+		}
+		$("#tblRoster").html(rosters);
+	
+	}
+	function DelRoster(id) {
+		Swal.fire({
+			title: "Are you sure?",
+			text: "You won't be able to revert this!",
+			icon: "warning",
+			showCancelButton: true,
+			confirmButtonColor: "#3085d6",
+			cancelButtonColor: "#d33",
+			confirmButtonText: "Yes, delete it!"
+		}).then((result) => {
+			if (result.isConfirmed) {
+				$.get("/Attendance/DelRoster?id=" + id).done(function (data) {
+					loadroster(data);
+					Swal.fire({
+						title: "Deleted!",
+						text: "Record has been deleted.",
+						icon: "success"
+					});
+				});
+			}
+		});
+	}
+	function RosterLine(id) {
+		$.get("/Attendance/GetRoster?id=" + id).done(function (data) {
+			loadroster(data);
+		});
+	}
+	$('#tbEmps tr').each(function (a, b) {
+		$(b).click(function () {
+			$('#tbEmps tr').css('font-weight', 'normal').css('color', '#000');
+			$(this).css('font-weight', 'bold').css('color', '#2a327d');
+		});
+	});
+</script>

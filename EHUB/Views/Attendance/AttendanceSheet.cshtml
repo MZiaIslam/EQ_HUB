@@ -1,0 +1,90 @@
+﻿@using EHUB.Utilities
+@{
+    ViewData["Title"] = "Attendance Sheet";
+    ViewData["pgHeader"] = "Staff Attendance Report";
+    AuthRights authRights = new AuthRights();
+    var chk = authRights.chk();
+    GM gM = new GM();
+}
+<style type="text/css">
+    .rptP {
+        padding-top: 8px;
+    }
+</style>
+<section class="content">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title">Report Columns & Parameters</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body rptP">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label>Month</label>
+                            <input type="month" id="dtAtt" name="dtAtt" value="@DateTime.Now.ToString("yyyy-MM")" class="form-control" required="required">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="">Staff Name</label>
+                            <select name="EmpId" id="staffid" class="form-control select2" style="width:100%" required="required">
+                                <option value="0">ALL</option>
+                                @foreach (var item in Model.staff)
+                                {
+                                        <option value="@item.empid">@item.empcode - @item.empname</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="">Sub-Department</label>
+                            <select name="SDepartId" id="SDepartId" class="form-control select2" style="width:100%" required="required">
+                                <option value="0">ALL</option>
+                                @foreach (var item in Model.sbdepart)
+                                {
+                                        <option value="@item.DepartID">@item.Depart</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <br />
+                            <button type="button" id="btnShow" class="btn btn-primary"><i class="fa-solid fa-file"></i> Run Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-default collapsed-card">
+                <div class="card-header">
+                    <h3 class="card-title">Reports Statistics</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool rptdtl" data-card-widget="collapse">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body rptD" style="display:none;padding: 0;">
+                    <iframe id="ifrm" src="" width="100%" height="100%" frameborder="0" style="min-height: 500px;">This is an embedded <a target="_blank" href="http://office.com">Microsoft Office</a> document, powered by <a target="_blank" href="http://office.com/webapps">Office Online</a>.</iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $("#btnShow").on('click', function (e) {
+            let url=encodeURIComponent("flowhr.izocsolutions.com/Login/AttendSheet?mnth="+$("#dtAtt").val()+"&empid="+$("#staffid").val()+"&departid="+$("#SDepartId").val()+"&token=0");
+            console.log(url)
+        $("#ifrm").attr("src","https://view.officeapps.live.com/op/embed.aspx?src="+url);
+        $('.prmhdr').trigger('click');
+         if ($('.rptD').is(':visible') == false) { $('.rptdtl').trigger('click'); }
+        });
+    </script>
+</section>

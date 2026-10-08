@@ -1,0 +1,282 @@
+﻿@using EHUB.Utilities
+@using Newtonsoft.Json.Linq
+@{
+    ViewData["Title"] = "Staff Leave Requests";
+    ViewData["pgHeader"] = "Recent Leave Requests";
+    AuthRights authRights = new AuthRights();
+    var chk = authRights.chk();
+}
+<style type="text/css">
+    .ft16 {
+        font-size: 14px;
+    }
+    .rd-opt {
+        float: left;
+        padding-right: 12px;
+    }
+</style>
+<section class="content">
+    @if (chk != "r" || chk != "")
+    {
+        <div class="col-md-6" style="margin-bottom: 10px;">
+            <a id="btnLeaveRequest" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New Leave Request</a>
+        </div>
+    }
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-striped table-hover collapsed" id="tbleaves">
+                        <thead>
+                            <tr>
+                                <th>Request Date</th>
+                                <th>Staff</th>
+                                <th>Leave Type</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Leave Status</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.leaves)
+                            {
+                                <tr>
+                                    <td>@item.Created.ToString("dd MMM yyyy")</td>
+                                    <td>@item.eName</td>
+                                    <td>@item.Leave</td>
+                                    <td>@item.dtFrom.ToString("dd MMM yyyy") - @item.dtTo.ToString("dd MMM yyyy")</td>
+                                    @* <td>@((item.dtTo - item.dtFrom).TotalDays + 1) day(s)</td> *@
+                                    <td>@item.lvduration</td>
+                                    @{
+                                        string lst = "";
+                                        if (item.aprvstat != null)
+                                        {
+                                            JArray jsonArray = JArray.Parse(item.aprvstat);
+                                            foreach (var itm in jsonArray)
+                                            {
+                                                // Access properties dynamically
+                                                string emp = itm["emp"].ToString();
+                                                string dt = itm["dtAD"].ToString();
+                                                string stat = itm["stat"].ToString();
+                                                lst += emp + " " + dt + " " + stat + Environment.NewLine;
+                                            }
+                                        }
+                                    }
+                                    <td title="@lst">
+                                        @{
+                                            if (item.aprvstatus == "To Approve")
+                                            {
+                                                <span class="badge bg-primary ft16">To Approve</span>
+                                            }
+                                            else if (item.aprvstatus == "Approved")
+                                            {
+                                                <span class="badge bg-success ft16">Approved</span>
+                                            }
+                                            else if (item.aprvstatus == "Refused")
+                                            {
+                                                <span class="badge bg-danger ft16">Refused</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            if (item.attachment != null)
+                                            {
+                                                <a href='~/dist/img/StaffData/leaves/@item.id/@item.attachment' target="_blank"><i class='fa-solid fa-paperclip'></i></a>
+                                            }
+                                        }
+                                        @item.Ldesc
+                                        <span class="btnsh float-right">
+                                            @if (item.aprvstatus == "To Approve")
+                                            {
+                                                <a class="btn btn-outline-danger btn-xs" onclick="delreq(@item.id)"><i class="fa-solid fa-times"></i> Delete</a>
+                                            }
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="dgLvRq" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">LEAVE REQUEST</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmStaffEdu" class="" method="post" asp-controller="Leaves" asp-action="StaffLeaves" enctype="multipart/form-data" onsubmit="validateData(event)">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="">Staff</label>
+                                    <select name="EmpId" id="staffid" class="form-control select2" style="width:100%">
+                                        @foreach (var item in Model.staff)
+                                        {
+                                            <option value="@item.empid">@item.empcode - @item.empname</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="">Leave Request Type</label>
+                                    <select name="LeaveID" id="leaveid" class="form-control">
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label>Leave Duration</label>
+                                    <div class="form-group" style="margin-top: -10px;">
+                                        <input type="hidden" id="lvD" name="lvduration" value="1" />
+                                        <div class="custom-control custom-radio rd-opt">
+                                            <input class="custom-control-input optDuration custom-control-input-primary" type="radio" id="optFull" value="1" name="optD" checked>
+                                            <label for="optFull" class="custom-control-label">Full Day(s)</label>
+                                        </div>
+                                        <div class="custom-control custom-radio rd-opt hq-lv">
+                                            <input class="custom-control-input optDuration custom-control-input-primary" type="radio" id="optHalfDay" value="2" name="optD">
+                                            <label for="optHalfDay" class="custom-control-label">Half Day</label>
+                                        </div>
+                                        <div class="custom-control custom-radio rd-opt hq-lv">
+                                            <input class="custom-control-input optDuration custom-control-input-primary" type="radio" id="optQuarter" value="3" name="optD">
+                                            <label for="optQuarter" class="custom-control-label">Quarter Day</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-4"><label>From Date</label>	<input type="date" id="dtFrom" name="dtFrom" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required"></div>
+                                        <div class="col-md-4 todate"><label>To Date</label>	<input type="date" id="dtTo" name="dtTo" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required="required"></div>
+                                        <div class="col-md-4">
+                                            <label>Duration</label>
+                                            <span id="Duration" class="form-control"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label>Description</label>
+                                    <textarea name="Ldesc" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="col-md-12">
+                                    <label>Supporting Document</label>        <div class="clearfix">
+                                    </div>
+                                    <input type="file" name="doc" class="" accept="image/png, image/jpeg">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+            function getNumberOfDays(start, end) {
+                const date1 = new Date(start);
+                const date2 = new Date(end);
+                // One day in milliseconds
+                const oneDay = 1000 * 60 * 60 * 24;
+                // Calculating the time difference between two dates
+                const diffInTime = date2.getTime() - date1.getTime();
+                // Calculating the number of days between two dates
+                const diffInDays = Math.round(diffInTime / oneDay);
+                return (diffInDays + 1) + " day(s)";
+            }
+        function validateData(event) {
+             let bal=  parseFloat( $("#leaveid option:selected").attr("data-bal"));
+             let dur=parseFloat($("#Duration").text());
+             if(bal<dur){
+                Swal.fire({
+              title: "Insufficient balance!",
+              text: "You do not have insufficient balance remaining for the selected leave type.!",
+              icon: "warning"
+            });
+                        event.preventDefault();
+             }
+            }
+            $(document).ready(function () {
+                $("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+                $(function () {
+                    $("#tbleaves").DataTable({
+                        "ordering": true,
+                        "responsive": true,
+                    })
+                });
+            });
+                $("#leaveid").on('change', function (e) {
+                if ($(this).val() == 2) {
+                    $(".hq-lv").show();
+                } else {
+                    $(".hq-lv").hide(); $("#optFull").prop("checked", true);
+                    $("#lvD").val(1);
+                }
+            });
+            $("#dtFrom, #dtTo").on('change', function (e) {
+                // $("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+                dtUpdate();
+            });
+            $('#btnLeaveRequest').on('click', function () {
+                $('.frm').val('');
+                $('#dgLvRq').modal("show");
+            });
+            $(".optDuration").on('change', function (e) {
+                $("#lvD").val($(this).val());
+                dtUpdate();
+            });
+            $("#staffid").on('change', function (e) {
+                 $("#leaveid").html("");
+                $.get("/Leaves/leaveTypes?id=" + $("#staffid").val()).done(function (obj) {
+                       for (const e of obj) {
+                     $("#leaveid").append("<option value='"+e.leaveID+"' data-bal='"+e.balance+"'>"+e.leave+" ("+e.balance+")</option>");
+                    }
+                });
+            });
+    function dtUpdate() {
+                if ($("#lvD").val() == "2") {
+                    $(".todate").hide();
+                    $("#dtTo").val($("#dtFrom").val());
+                    $("#Duration").html("0.5 Day");
+                }
+                else if ($("#lvD").val() == "3") {
+                    $(".todate").hide();
+                    $("#dtTo").val($("#dtFrom").val());
+                    $("#Duration").html("0.25 Day");
+                }
+                else {
+                    $(".todate").show();
+                    $("#Duration").html(getNumberOfDays($("#dtFrom").val(), $("#dtTo").val()));
+                }
+            }
+    function delreq(id){
+                    Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.get("/Leaves/DelReq?id=" + id).done(function (data) {
+                        Swal.fire({
+                            title: "Deleted!",
+                            text: "Record has been deleted.",
+                            icon: "success"
+                        });
+                            location.href = '/Leaves/StaffLeaves';
+                    });
+                }
+            });
+        }
+</script>

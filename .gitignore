@@ -1,0 +1,68 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rtifacts/
+
+# ASP.NET Core
+wwwroot/lib/
+*.cache
+project.lock.json
+project.fragment.lock.json
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Visual Studio temporary files
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.tmp
+*.temp
+*.log
+
+# User-specific settings
+*.rsuser
+*.sln.ide
+
+# Local configuration and secrets
+appsettings.Local.json
+appsettings.Development.local.json
+secrets.json
+.env
+.env.*
+
+# Keep example environment configuration
+!.env.example
+
+# Database files and local database backups
+*.mdf
+*.ldf
+*.bak
+*.trn
+
+# IIS / publish output
+publish/
+PublishProfiles/
+*.publishsettings
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Files uploaded at runtime (homework chat attachments, staff CVs): personal data, never part of the source
+wwwroot/HWChat/
+wwwroot/StaffCVs/
+App_Data/Uploads/

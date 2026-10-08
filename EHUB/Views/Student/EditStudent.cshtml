@@ -1,0 +1,273 @@
+﻿@using EHUB.Utilities
+@using Newtonsoft.Json
+@{
+    ViewData["Title"] = "Student Registration";
+    ViewData["pgHeader"] = "Edit Student Record";
+    AuthRights authRights = new AuthRights();
+    var chk = authRights.chk();
+}
+<style type="text/css">
+    .select2-container--default .select2-results__group {
+    cursor: default;
+    display: block;
+    padding: 6px;
+    background: #e5e5e5;
+    color: #2a327d;
+    }
+
+    .btnsh {
+    opacity: 0;
+    }
+
+    #deactivate {
+    opacity: 0;
+    }
+
+    .col-md-2:hover #deactivate {
+    opacity: 1;
+    }
+
+    tr:hover .btnsh {
+    opacity: 1;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <form asp-controller="Student" asp-action="EditStudent" enctype="multipart/form-data" method="post">
+                <div class="row">
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            PERSONAL DETAIL
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <p class="mb-1" style="color: red;font-size: small;">
+                                @TempData["msg"]
+                            </p>
+                            <div class="col-md-10">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <input type="hidden" name="StudentID" id="StudentID" value="@Model.stu.StudentID">
+                                        <label for="">Student Name <i class="fa-thin fa-asterisk fa-beat-fade fa-lg" style="color: #f00000;"></i></label>
+                                        <input type="text" value="@Model.stu.StudentName" name="StudentName" class="form-control" required="required" oninput="setCustomValidity('')" oninvalid="this.setCustomValidity('Please fill name of student')">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="">Gender</label>
+                                        <select name="Gender" id="Gender" class="form-control">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Date of Birth</label>
+                                        <input type="date" value="@(Model.stu.DOB==null?"":Model.stu.DOB.ToString("yyyy-MM-dd"))" name="DOB" class="form-control" />
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Grade Level</label>
+                                        <select id="GradeID" name="GradeID" class="form-control">
+                                            @foreach (var item in Model.grade)
+                                            {
+                                                <option value="@item.GradeID">@item.GradeLevel</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <label for="">School Attended</label>
+                                        <input type="text" value="@(Model.stu.School?? "")" name="School" class="form-control">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="">Status</label>
+                                        <select id="Stat" name="Stat" class="form-control">
+                                            
+                                            <option value="Active">Active</option>
+                                            <option value="Draft">Draft</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Completed">Completed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+
+                                <label>Photo</label>        <div class="clearfix">
+                                </div>
+                                <img id="imgStaff" src="~/dist/img/StudentData/pics/@(Model.stu.StudentID).png" onerror="this.onerror=null;this.src='/dist/img/StaffData/pics/usr.png'" style="height: 100px;">
+                                <input type="file" name="photo" id="StaffPic" class="" accept="image/png, image/jpeg" style="display: none;">
+                                <h3></h3>
+                                <label for="StaffPic" class="btn btn-primary btn-xs">
+                                    Upload Image
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 10px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-1" style="flex: 0 0 0.333333%;writing-mode: vertical-lr;text-align: center;background: aliceblue;color: #2a327d;font-size: 20px;padding:0;">
+                        <span>
+                            GUARDIAN/INFORMATION
+                        </span>
+                    </div>
+                    <div class="col-11">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="">Parent/Guardian Name</label>
+                                <input type="text" value="@(Model.stu.Guardian??"")" name="Guardian" class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="">Relationship to Student</label>
+                                <select class="form-control" id="Relationship" name="Relationship" required>
+                                    <option value="Mother">Mother</option>
+                                    <option value="Father">Father</option>
+                                    <option value="Guardian">Guardian</option>
+                                    <option value="Brother">Brother</option>
+                                    <option value="Sister">Sister</option>
+                                    <option value="Aunt">Aunt</option>
+                                    <option value="Uncle">Uncle</option>
+                                    <option value="Grandparent">Grandparent</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="">Phone Number</label>
+                                <input type="text" name="CellNo" value="@(Model.stu.CellNo??"")" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="">Email Address <i class="fa-thin fa-asterisk fa-beat-fade fa-lg" style="color: #f00000;"></i></label>
+
+                                <div class="input-group mb-4">
+                                    <input type="text" name="Email" value="@(Model.stu.Email??"")" id="txtEmil" class="form-control" required="required">
+                                    @if (chk == "f")
+                                    {
+                                        <div class="input-group-append">
+                                            <div class="input-group-text btn-primary">
+
+                                            <button data-toggle="modal" data-target="#dgSetPass" type="button" class="btn btn-xs btn-primary"><i class="fa fa-key"></i></button>
+                                        </div>
+                                    </div>}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="">Subjects of Interest/Needs</label>
+                                <input type="text" value="@(Model.stu.Subjects??"")" name="Subjects" placeholder="Algebra, Geometry etc." class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="">Preferred Tutoring </label>
+                                <select name="TutoringFormat" id="TutoringFormat" class="form-control">
+                                    <option value="In-person">In-person</option>
+                                    <option value="Online">Online</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="">Preferred Schedule</label>
+                                <input type="text" value="@(Model.stu.PreferredSchedule??"")" name="PreferredSchedule" placeholder="Days/times that work best for tutoring sessions." class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="">Preferred Frequency of Sessions</label>
+                                <input type="text" value="@(Model.stu.SessionsFrequency??"")" name="SessionsFrequency" placeholder="Weekly, bi-weekly, or specific amount of hours per week." class="form-control">
+                            </div>
+                            <div class="col-md-12">
+                                <label for="">Current Academic Performance</label>
+                                <textarea  name="AcadPerformance" placeholder="Any specific challenges the child is facing (e.g., struggling with certain topics or excelling in others)" class="form-control">@(Model.stu.AcadPerformance ?? "")</textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="">Learning Goals for the Child</label>
+                                <textarea  name="LearningGoals" placeholder="Areas the parent wants the child to improve on, or specific skills to develop." class="form-control">@(Model.stu.LearningGoals ?? "")</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-top: 10px;">
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                    <div class="col-12" style="padding-left: 48px;">
+                        @if (chk == "f")
+                        {
+                            <button type="submit" class="btn btn-primary"><i class="fa-solid fa-user-plus"></i> Save Record</button>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+<div class="modal" id="dgSetPass" style="display: none;">
+    <div class="modal-dialog" style="width: 350px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Set Password</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group has-feedback" style="margin-bottom: 10px;">
+                    <input id="txtSPass" onkeyup="checkPasswordStrength(this)" type="password" class="form-control" placeholder="Password" required>
+                </div>
+                <div class="form-group has-feedback">
+                    <input id="txtSRPass" type="password" class="form-control" placeholder="Retype password" required>
+                </div>
+                <div class="strength-message"></div>
+                <div class="alert alert-warning alert-dismissible" style="display: none">
+                    <span class="ptext"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnSetPass" type="button" class="btn btn-danger">Set Password</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#StaffPic").on('change', function (e) {
+            if ($($('#StaffPic')[0]).val() != "") {
+                var file = $('#StaffPic')[0].files[0];
+                var reader = new FileReader();
+                reader.onloadend = function () {
+                    imgStaff = reader.result;
+                    $('#imgStaff').attr('src', imgStaff);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        $("#Gender").val('@(Model.stu.Gender)');
+        $("#TutoringFormat").val('@(Model.stu.TutoringFormat ?? "")');
+         $("#Relationship").val('@(Model.stu.Relationship ?? "")');
+          $("#GradeID").val('@(Model.stu.GradeID ?? "")');
+          $("#Stat").val('@(Model.stu.Stat ?? "")');
+        $('#btnSetPass').on('click', function() {
+            const password = $("#txtSPass").val();
+            const confirmPassword = $("#txtSRPass").val();
+                if (!isPasswordStrong(password)) {
+                    $(".ptext").html("ERROR: Password is not strong enough.");
+                    $(".alert-dismissible").show().delay(3000).fadeOut();
+                    return;
+                }
+                if (password === confirmPassword && password.trim()) {
+                    $.post("/Student/SetSPass", {
+                        pass: password,
+                        rpass: confirmPassword,
+                        empid: $("#StudentID").val()
+                    }).done(() => {
+                        $('#dgSetPass').modal('hide');
+                        $(".alert-dismissible").hide();
+                    });
+                } else {
+                        $(".ptext").html("ERROR: Your password and confirmation password do not match.");
+                        $(".alert-dismissible").show().delay(3000).fadeOut();
+                        }
+        });
+    });
+
+
+    
+</script>

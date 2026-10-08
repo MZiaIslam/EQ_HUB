@@ -1,0 +1,197 @@
+﻿@using EHUB.Utilities
+@using System.Data
+@{
+    ViewData["Title"] = "Bulk Email Notifications";
+    ViewData["pgHeader"] = "<i class='fa-solid fa-mail-bulk fa-lg me-2'></i> Bulk Email Notifications";
+    var chk = new AuthRights().chk();
+    GM gM = new GM();
+}
+<style>
+    .card-rounded {
+        border-radius: 1rem;
+    }
+    .sticky-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+    }
+    .small-muted {
+        font-size: .9rem;
+        color: #6c757d;
+    }
+    .chip {
+        padding: .25rem .5rem;
+        border-radius: 9999px;
+        background: #f1f3f5;
+        margin-right: .25rem;
+    }
+    .table-responsive {
+        max-height: 360px;
+    }
+    .required:after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+<section class="content">
+    <h5 class="text-danger py-2">@TempData["msg"]</h5>
+    <div class="container-fluid">
+        @using (Html.BeginForm("BulkEmail", "Administration", FormMethod.Post,
+                new { enctype = "multipart/form-data", id = "bulkMailForm" }))
+        {
+            @Html.AntiForgeryToken()
+            <div class="row g-3">
+                <!-- Email details -->
+                <div class="col-lg-12">
+                    <div class="card card-rounded shadow-sm">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label required">Subject</label>
+                                <input type="text" class="form-control" id="subject" name="Subject" maxlength="150" required />
+                                <div class="form-text"><span id="subjectCount">0</span>/150</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label required">Message Body</label>
+                                <textarea class="form-control" id="summernote" name="MailBody" rows="8" required></textarea>
+                                <div class="d-flex justify-content-between">
+                                    <div class="form-text">Supports basic HTML (bold, links, lists).</div>
+                                    <div class="form-text"><span id="bodyCount">0</span> characters</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="form-label">Attachment</label>
+                                <input type="file" id="attachment" name="Attachment" />
+                                <div class="form-text">PDF, DOCX, XLSX, JPG/PNG. Max 10 MB each.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recipients -->
+                <div class="col-md-12">
+                    <div class="card card-rounded shadow-sm mb-3">
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label">Recipients</label>
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="chip"><span id="selCount">0</span> selected</div>
+                                        <button type="button" class="btn btn-xs btn-outline-primary mr-2" id="btnSelectAll">
+                                            <i class="fa-regular fa-square-check mr-1"></i> Select All
+                                        </button>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary mr-2" id="btnClear">
+                                            <i class="fa-regular fa-square mr-1"></i> Clear
+                                        </button>
+                                        <div class="ms-auto small-muted">
+                                            Showing <span id="showingCount">0</span> / <span id="totalCount">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Audience Filter</label>
+                                    <select id="audienceSelect" class="form-control">
+                                        <option value="all">All Users</option>
+                                        <option value="Parents">Students Parent</option>
+                                        <option value="Staff">Staff</option>
+                                    </select>
+                                    <div class="form-text">Choose segment to load recipients.</div>
+                                </div>
+                            </div>
+                            <div class="table-responsive border rounded">
+                                <table class="table table-sm align-middle mb-0" id="recipientsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width:40px;"><input type="checkbox" id="checkAll" /></th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Group</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Filled by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer actions -->
+                <div class="col-12">
+                    <div class="card shadow-sm sticky-actions">
+                        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div class="small-muted" style="color: red;">
+                                <i class="fa-regular fa-circle-question me-1"></i>
+                                Validate your subject & body before sending.
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btnSendNow">
+                                <i class="fa-solid fa-mail-bulk"></i> Send Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+    <script>
+        var Audience = @Html.Raw(Model);
+        function renderTable(data) {
+            const tbody = $("#recipientsTable tbody").empty();
+            data.forEach(item => {
+                tbody.append(`
+                    <tr>
+                        <td><input type="checkbox" class="row-check" name="Recipients" value="${item.Email}" /></td>
+                        <td>${item.name}</td>
+                        <td>${item.Email}</td>
+                        <td>${item.group}</td>
+                    </tr>
+                `);
+            });
+            updateCounts();
+        }
+        function updateCounts() {
+            const rows = $("#recipientsTable tbody tr");
+            const checks = $(".row-check");
+            const sel = $(".row-check:checked");
+            $("#showingCount").text(rows.length);
+            $("#totalCount").text(rows.length);
+            $("#selCount").text(sel.length);
+            $("#checkAll").prop("checked", sel.length === checks.length && checks.length > 0)
+                          .prop("indeterminate", sel.length > 0 && sel.length < checks.length);
+        }
+        $(function () {
+            // editor
+            $('#summernote').summernote({ height: 150 });
+            // load all initially
+            renderTable(Audience);
+            // filter on dropdown
+            $("#audienceSelect").change(function () {
+                const val = $(this).val();
+                const filtered = val === "all" ? Audience : Audience.filter(x => x.group === val);
+                renderTable(filtered);
+            });
+            // char counts
+            $("#subject").on("input", function () {
+                $("#subjectCount").text(this.value.length);
+            });
+            $("#summernote").on("input", function () {
+                $("#bodyCount").text(this.value.length);
+            });
+            // select all / clear
+            $("#checkAll").on("change", function () {
+                $(".row-check").prop("checked", this.checked);
+                updateCounts();
+            });
+            $("#recipientsTable").on("change", ".row-check", updateCounts);
+            $("#btnSelectAll").click(() => { $(".row-check").prop("checked", true); updateCounts(); });
+            $("#btnClear").click(() => { $(".row-check").prop("checked", false); updateCounts(); });
+            // guard before submit
+            $("#bulkMailForm").on("submit", function (e) {
+                if ($(".row-check:checked").length === 0) {
+                    e.preventDefault();
+                    alert('Please select at least one recipient.');
+                }
+            });
+        });
+    </script>
+

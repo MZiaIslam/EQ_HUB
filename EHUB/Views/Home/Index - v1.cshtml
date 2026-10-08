@@ -1,0 +1,1087 @@
+﻿@using EHUB.Utilities
+@{
+	ViewData["Title"] = "Dashboard";
+	var uinfo = User.Claims.ToArray();
+	var authRights = new AuthRights();
+	var chk = authRights.chk();
+	var mgr = authRights.mgr();
+	var gM = new GM();
+	var chkAdm = uinfo[3].Value != "18" && uinfo[3].Value != "19" ? true : false;
+}
+<style>
+	.controls {
+		margin: 6px 0px 6px 4px;
+	}
+	.calendar, .day-view {
+		display: none;
+	}
+	.active {
+		display: block;
+	}
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		transform: scale(calc(100vw / 1200));
+		table-layout: auto;
+	}
+	th, td {
+		border: 1px solid #ddd;
+		padding: 10px;
+		text-align: center;
+		position: relative;
+		/* white-space: nowrap; */
+	}
+	.event {
+		font-size: 12px;
+		color: white;
+		background-color: blue;
+		padding: 2px;
+		border-radius: 4px;
+		display: block;
+		margin-top: 2px;
+		text-align: left;
+		padding-left: 9px;
+	}
+	.event-time {
+		font-size: 10px;
+		display: block;
+		color: #fff;
+	}
+	.event-form {
+		margin-bottom: 20px;
+	}
+	.day-view .event-list {
+		list-style: none;
+		padding: 0;
+	}
+		.day-view .event-list li {
+			padding: 5px;
+			border: 1px solid #ddd;
+			margin: 5px 0;
+			background: lightblue;
+		}
+	.event-list li:hover .btnsh {
+		opacity: 1;
+		display: inline;
+	}
+	.btnsh {
+		opacity: 0;
+	}
+	.small-input-group .input-group-text,
+	.small-input-group .form-control {
+		font-size: 12px;
+		height: 28px;
+		padding: 2px 6px;
+	}
+	.day-number {
+		background-color: #2a327d;
+		color: #FFFFFF;
+		box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 26px;
+		height: 26px;
+		border-radius: 50%;
+		font-size: 0.85rem;
+		font-weight: 600;
+		margin-bottom: 6px;
+	}
+</style>
+<style>
+	.calend {
+		border-collapse: collapse;
+		box-shadow: 0 0 10px rgba(0,0,0,0.1);
+		background: white;
+		border-radius: 12px;
+		overflow: hidden;
+	}
+		.calend th {
+			background-color: #2a327d;
+			color: white;
+			padding: 10px;
+			text-align: center;
+		}
+		.calend td {
+			border: 1px solid #ddd;
+			height: 80px;
+			text-align: right;
+			padding: 5px;
+			vertical-align: top;
+		}
+			.calend td.other-month {
+				color: #aaa;
+				background-color: #f0f0f0;
+			}
+			.calend td.today {
+				background-color: #cce5ff;
+			}
+	td:nth-child(even) {
+		background-color: #fafafa;
+	}
+	/* Odd columns */
+	td:nth-child(odd) {
+		background-color: #ffffff;
+	}
+	.calendar-event .feedback-btn {
+		max-height: 0;
+		opacity: 0.4;
+		display: inline-block;
+		overflow: hidden;
+		transform: translateY(-8px);
+		transition: max-height 0.3s ease, opacity 0.25s ease, transform 0.3s ease;
+	}
+	.calendar-event:hover .feedback-btn {
+		max-height: 40px;
+		opacity: 1;
+		transform: translateY(0);
+	}
+	.calendar-event .btn-div {
+		height: 0;
+		padding-bottom: 8px;
+	}
+	.calendar-event:hover .btn-div {
+		margin-top: 5px;
+		height: auto;
+		padding-bottom: unset;
+	}
+</style>
+<style type="text/css">
+	/* Desktop */
+	.calendar-desktop {
+		display: block;
+	}
+	.mobile-agenda {
+		display: none;
+	}
+	/* Mobile */
+	@@media (max-width: 767px) {
+		.calendar-desktop {
+			display: none;
+		}
+		.mobile-agenda {
+			display: block;
+			width: 100%;
+		}
+		.agenda-week {
+			margin-bottom: 8px;
+			border-radius: 6px;
+			overflow: hidden;
+		}
+		.agenda-week-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 6px 9px;
+			background: #f8fafc;
+			border-bottom: 1px solid #e2e8f0;
+			color: #475569;
+			font-size: .72rem;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		.agenda-day {
+			padding: 6px 0;
+			border-bottom: 1px solid #e2e8f0;
+		}
+		.agenda-date {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			margin-bottom: 5px;
+			padding: 0 5px;
+			color: #475569;
+			font-size: .72rem;
+			font-weight: 600;
+		}
+			.agenda-date.today {
+				color: #82b74b;
+			}
+		.agenda-event {
+			margin: 3px 5px;
+		}
+		.agenda-empty {
+			padding: 4px 8px;
+			color: #94a3b8;
+			font-size: .65rem;
+		}
+	}
+</style>
+<section class="content">
+	<div class="card" style="
+ background: none;
+ box-shadow: none;
+">
+		<div class="card-body p-0">
+			<div class="row">
+				@if (chkAdm)
+				{
+					<div class="col-md-3">
+						<div class="card-tools" style="width: 100%;padding: 2px 2px 0 2px;">
+							<div class="input-group small-input-group">
+								<div class="input-group-prepend">
+									<span class="input-group-text">Tutor</span>
+								</div>
+								<select class="form-control" id="cboEmp" asp-items="Model.emps">
+									<option value="0">ALL</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				}
+				<div class="col-md-3">
+					<div class="card-tools" style="max-width: 185px;padding: 2px 2px 0 2px;">
+						<div class="input-group small-input-group">
+							<div class="input-group-prepend">
+								<span class="input-group-text">Month</span>
+							</div>
+							<input type="month"
+								   id="dtMonth"
+								   name="dtMonth"
+								   value="@DateTime.Now.ToString("yyyy-MM")"
+								   class="form-control"
+								   required="required">
+						</div>
+					</div>
+				</div>
+				<div class="col-md-@(chkAdm ? "6" : "9")">
+					<div class="controls" style="float: right;padding-right: 3px;">
+						<button onclick="showView('month')" class="btn btn-xs btn-primary">Month View</button>
+						<button onclick="showView('day')" class="btn btn-xs btn-primary">Day View</button>
+					</div>
+				</div>
+			</div>
+			<div id="dayView" class="day-view">
+				<div style="font-size: 22px; font-variant-caps: petite-caps; color: #2a327d; text-shadow: 0 0 10px #2a74b6; padding-left: 4px;">
+					Day Schedule
+				</div>
+				<ul id="eventList" class="event-list"></ul>
+			</div>
+			<div id="monthView" class="calendar active">
+				<div style="font-size: 22px; font-variant-caps: petite-caps; color: #2a327d; text-shadow: 0 0 10px #2a74b6; padding-left: 4px;">
+					Monthly Calendar
+				</div>
+				<div class="calendar-desktop">
+					<table class="table">
+						<thead>
+							<tr>
+								<th>SUN</th>
+								<th>MON</th>
+								<th>TUE</th>
+								<th>WED</th>
+								<th>THU</th>
+								<th>FRI</th>
+								<th>SAT</th>
+							</tr>
+						</thead>
+						<tbody id="calendarBody"></tbody>
+					</table>
+				</div>
+				<div id="mobileAgenda" class="mobile-agenda"></div>
+				@* 			<table class="calend dataTable000" id="tblCal">
+					<thead>
+						<tr>
+							<th>SUN</th>
+							<th>MON</th>
+							<th>TUE</th>
+							<th>WED</th>
+							<th>THU</th>
+							<th>FRI</th>
+							<th>SAT</th>
+						</tr>
+					</thead>
+					<tbody id="calendarBody"></tbody>
+				</table> *@
+			</div>
+			@if (chkAdm)
+			{
+				<div class="row">
+					<div class="col-md-12">
+						<div class="card card-default">
+							<div class="card-header" style="background: #2a327d;color: #fff;padding: 6px 10px 6px 6px;">
+								<h3 class="card-title">Invoices Month wise</h3>
+								<div class="card-tools">
+									<button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse">
+										<i class="fas fa-minus"></i>
+									</button>
+								</div>
+							</div>
+							<div class="card-body p-0" style="display: block;">
+								<div class="row">
+									<div class="col-md-12" id="dvInvoices"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+			<div id="dtlD" class="row charts"></div>
+			@if (!chkAdm)
+			{
+				<div class="row">
+					<div class="col-md-12">
+						<div class="card card-default">
+							<div class="card-header" style="background: #2a327d;color: #fff;padding: 6px 10px 6px 6px;">
+								<h3 class="card-title">Scheduled/Completed Hours</h3>
+								<div class="card-tools">
+									<button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse">
+										<i class="fas fa-minus"></i>
+									</button>
+								</div>
+							</div>
+							<div class="card-body p-0" style="display: block;">
+								<div class="row">
+									<div class="col-md-12" id="tbHours"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</section>
+<script src="~/plugins/reportview/data.js"></script>
+<script type="text/javascript">
+	$(document).ready(function () {
+		loadRpts();
+		getHours();
+		getInvoices();
+		ScheduledSessions();
+		$("#dtMonth, #cboEmp").on('change', function (e) {
+			$('#tblInvoices').DataTable().clear().destroy();
+			loadRpts();
+			getHours();
+			ScheduledSessions();
+			getInvoices();
+		});
+	});
+	function getHours() {
+		$.get("/home/getHours?month=" + $("#dtMonth").val(), function (responseText) {
+			if (!responseText) {
+				return;
+			}
+			$("#tbHours").html(responseText);
+		});
+	}
+	function getInvoices() {
+		$.get("/home/getInvoices?month=" + $("#dtMonth").val(), function (responseText) {
+			if (!responseText) {
+				return;
+			}
+			$("#dvInvoices").html(responseText);
+			sumTable(`tblInvoices`);
+		});
+	}
+	function loadRpts() {
+		$.get("/home/rptDash", function (responseText) {
+			if (!responseText) {
+				$('.charts').hide();
+				return;
+			}
+			const dtlData = responseText.split('¦').filter(Boolean);
+			const dtlDHtml = dtlData.map(value => {
+				const rptSec = value.split('|');
+				const html = createReportSection(rptSec);
+				loadReportSection(rptSec);
+				return html;
+			}).join('');
+			$('#dtlD').html(dtlDHtml);
+		});
+	}
+	function createReportSection(rptSec) {
+		return `<div class='dtlD ${rptSec[13]}'>
+												<h6 id=t${rptSec[10]} class='tRpt' style='text-align: center; background: #2a327d; padding: 4px 0 4px 0; color: white;'>
+													${decodeURIComponent(rptSec[3])}
+												</h6>
+												<div id='c${rptSec[10]}' class='chrt' style='margin-top: 2px;'></div>
+											</div>`;
+	}
+	function loadReportSection(rptSec) {
+		const url = `/HRReports/ReportSection?info='${encodeURIComponent(rptSec[1] + "','" + rptSec[2] + "','" + rptSec[5] + "':" + rptSec[0] + ":" + rptSec[10])}`;
+		$.get(url, function (responseText) {
+			const containerId = `#c${rptSec[10]}`;
+			$(containerId).html(responseText);
+			const tb = $(`#chrt-tb${rptSec[10]}`);
+			if (rptSec[11] === '1') {
+				configureHighchart(tb, rptSec);
+			} else {
+				$(containerId).css('margin-left', '0px');
+			}
+			if (rptSec[10] != '1015') {
+				sumTable(`chrt-tb${rptSec[10]}`);
+			}
+			if (rptSec[6] === '0') {
+				tb.hide();
+			} else {
+				formatNumericCells();
+			}
+			if (!$.fn.DataTable.isDataTable('#chrt-tb1015')) {
+				$("#chrt-tb1015").DataTable({
+					"ordering": false,
+					"responsive": true,
+					searching: false,
+					paging: false,
+					info: false,
+					lengthChange: false
+				});
+			}
+		});
+	}
+	function configureHighchart(tb, rptSec) {
+		const attrs = {
+			'data-graph-height': rptSec[12],
+			'data-graph-type': rptSec[9].replace('bar', 'column'),
+			'data-graph-container-before': '1'
+		};
+		if (rptSec[9] === "pie") {
+			attrs['data-graph-datalabels-enabled'] = '1';
+			$(`#chrt-tb${rptSec[10]} tbody tr`).each(function () {
+				$('td:nth-child(2)', this).attr('data-graph-name', $(':nth-child(1)', this).html());
+			});
+		}
+		if (rptSec[8] === '1') {
+			attrs['data-graph-inverted'] = '1';
+			attrs['data-graph-xaxis-labels-enabled'] = '1';
+		}
+		tb.attr(attrs).highchartTable();
+		$('defs').next().hide();
+		$(window).trigger('resize');
+	}
+	function formatNumericCells() {
+		$('.tb-css td').each(function () {
+			const $cell = $(this);
+			if ($.isNumeric($cell.html())) {
+				$cell.html($.number($cell.html(), 2))
+					.css('text-align', 'right');
+			}
+		});
+	}
+</script>
+<script type="text/javascript">
+	let events = [];
+	function ScheduledSessions() {
+			var check = "@chkAdm";
+	var emp;
+	if (check === "True") {
+		emp = $("#cboEmp").val();
+	} else {
+		emp = 0;
+	}
+		$.get("/home/ScheduledSessions?month=" + $("#dtMonth").val()+"&emp="+ emp, function(responseText) {
+			if (!responseText) {
+				return;
+			}
+			events = JSON.parse(responseText);
+			loadCalendar();
+			loadDayView();
+			dataTbl();
+		});
+	}
+	function showView(view) {
+		document.getElementById('dayView').classList.remove('active');
+		document.getElementById('monthView').classList.remove('active');
+		if (view === 'day') {
+			document.getElementById('dayView').classList.add('active');
+			loadDayView();
+		} else {
+			document.getElementById('monthView').classList.add('active');
+			loadCalendar();
+			// $('.calend').DataTable().draw(false);
+		}
+	}
+	function loadDayView() {
+		const eventList = document.getElementById("eventList");
+		let date = new Date();
+		eventList.innerHTML = "";
+		let sortedEvents = events.sort((a, b) => a.day - b.day || a.startTime.localeCompare(b.startTime));
+		sortedEvents.forEach(event => {
+			let eventItem = document.createElement("li");
+			eventItem.innerHTML = `<strong>${event.fday} ${event.Timings} - ${event.StudentName}</strong>: ${event.Guardian} | Subject(s):${event.subjects} | Tutor:${event.tutor} <a class="btn btnsh btn-info btn-xs float-right" href="home/Feedback/${event.Id}" onclick="Feedback(${event.Id},this)" style="margin-top: -1px;">📝 Feedback</a>`;
+			if (date.getDate() == parseInt(event.fday)) {
+				eventItem.classList.add("blink");
+			}
+			if (event.Stat == "Scheduled") {
+				eventItem.classList.add("bg-primary");
+			} else if (event.Stat == "Completed") {
+				eventItem.classList.add("bg-success");
+			} else if (event.Stat == "Cancel") {
+				eventItem.classList.add("bg-danger");
+			}
+			eventList.appendChild(eventItem);
+		});
+	}
+		function loadCalendar() {
+		const calendarBody = document.getElementById("calendarBody");
+		const mobileAgenda = document.getElementById("mobileAgenda");
+		calendarBody.innerHTML = "";
+		mobileAgenda.innerHTML = "";
+		const monthVal = $("#dtMonth").val();
+		if (!monthVal) return;
+		const [year, month] = monthVal.split("-").map(Number);
+		const date = new Date(year, month - 1, 1);
+		const today = new Date();
+		const firstDay = date.getDay();
+		const daysInMonth = new Date(
+			year,
+			month,
+			0
+		).getDate();
+		const statusColors = {
+			Scheduled: "#007bff",
+			Completed: "#10B981",
+			Cancel: "#dc3545"
+		};
+		// =========================================================
+		// CREATE EVENT CARD
+		// =========================================================
+		function createEvent(event) {
+			const borderColor =
+				statusColors[event.Stat] || "#10B981";
+			const color =
+				stringToColor(event.TutorID);
+			const eventDiv =
+				document.createElement("div");
+			eventDiv.className = "calendar-event";
+			if (event.Stat === "Cancel") {
+				eventDiv.style.cssText = `
+					background-size:86px;
+					background-position:right bottom;
+					background-image:url(/dist/img/cancel.svg);
+					background-repeat:no-repeat;
+					border-left:4px solid ${borderColor};
+					border-radius:6px;
+					margin-bottom:6px;
+					box-shadow:0 1px 2px rgba(0,0,0,.05);
+					font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+					overflow:hidden;
+					text-align:left;
+				`;
+			} else {
+				eventDiv.style.cssText = `
+					background:#fff;
+					border-left:4px solid ${borderColor};
+					border-radius:6px;
+					margin-bottom:6px;
+					box-shadow:0 1px 2px rgba(0,0,0,.05);
+					font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+					overflow:hidden;
+					text-align:left;
+				`;
+			}
+			eventDiv.innerHTML = `
+				<div style="
+					padding:5px 7px;
+					background:${color};
+					color:#fff;
+					font-size:.85rem;
+					font-weight:500;
+				">
+					${event.StudentName}
+				</div>
+				<div style="padding:5px 7px">
+					<div style="
+						color:${color};
+						font-size:.85rem;
+						font-weight:600;
+					">
+						${event.tutor}
+						<small style="
+							color:${color};
+							opacity:.75;
+							font-size:.7rem;
+							font-weight:500;
+						">
+							(${event.subjects})
+						</small>
+					</div>
+					<div style="
+						margin-top:3px;
+						color:${color};
+						font-size:.65rem;
+						font-weight:600;
+					">
+						${event.Timings}
+					</div>
+					<div
+						class="btn-div"
+						style="margin-top:5px"
+					>
+						<a
+							class="feedback-btn"
+							href="home/Feedback/${event.Id}"
+							onclick="Feedback(${event.Id},this)"
+							title="Click to add feedback"
+							style="
+								display:inline-block;
+								padding:2px 6px;
+								background:${color};
+								border-radius:4px;
+								color:#fff;
+								font-size:.7rem;
+								font-weight:500;
+								text-decoration:none;
+							"
+						>
+							📝 Add Feedback
+						</a>
+					</div>
+				</div>
+			`;
+			return eventDiv;
+		}
+		// =========================================================
+		// DESKTOP CALENDAR
+		// =========================================================
+		let weekNumber = 1;
+		for (
+			let startDay = 1 - firstDay;
+			startDay <= daysInMonth;
+			startDay += 7
+		) {
+			const weekId =
+				`desktop-week-${weekNumber}`;
+			// -----------------------------------------------------
+			// WEEK HEADER
+			// -----------------------------------------------------
+			const weekHeader =
+				document.createElement("tr");
+			const weekHeaderCell =
+				document.createElement("td");
+			weekHeaderCell.colSpan = 7;
+			weekHeaderCell.style.padding = "3px 0";
+			weekHeaderCell.innerHTML = `
+				<div
+					class="calendar-week-header"
+					style="
+						display:flex;
+						align-items:center;
+						justify-content:space-between;
+						padding:5px 8px;
+						background:#f8fafc;
+						border:1px solid #e2e8f0;
+						border-radius:5px;
+						color:#475569;
+						font-size:.72rem;
+						font-weight:600;
+						cursor:pointer;
+					"
+				>
+					<span>Week ${weekNumber}</span>
+					<span
+						id="${weekId}-icon"
+						style="font-size:.65rem"
+					>
+						▲
+					</span>
+				</div>
+			`;
+			weekHeader.appendChild(weekHeaderCell);
+			calendarBody.appendChild(weekHeader);
+			// -----------------------------------------------------
+			// WEEK ROW
+			// -----------------------------------------------------
+			const row =
+				document.createElement("tr");
+			row.id = weekId;
+			// -----------------------------------------------------
+			// 7 DAYS
+			// -----------------------------------------------------
+			for (let i = 0; i < 7; i++) {
+				const day =
+					startDay + i;
+				const cell =
+					document.createElement("td");
+				cell.className =
+					"calendar-day";
+				// Empty cell
+				if (
+					day < 1 ||
+					day > daysInMonth
+				) {
+					row.appendChild(cell);
+					continue;
+				}
+				// -------------------------------------------------
+				// TODAY
+				// -------------------------------------------------
+				if (
+					today.getDate() === day &&
+					today.getMonth() === date.getMonth() &&
+					today.getFullYear() === date.getFullYear()
+				) {
+					cell.classList.add("blink");
+				}
+				// -------------------------------------------------
+				// DAY NUMBER
+				// -------------------------------------------------
+				const dayNumber =
+					document.createElement("span");
+				dayNumber.className =
+					"day-number";
+				dayNumber.textContent =
+					day;
+				cell.appendChild(dayNumber);
+				// -------------------------------------------------
+				// EVENTS
+				// -------------------------------------------------
+				const dayEvents =
+					events.filter(
+						event => event.day === day
+					);
+				dayEvents.forEach(event => {
+					cell.appendChild(
+						createEvent(event)
+					);
+				});
+				row.appendChild(cell);
+			}
+			calendarBody.appendChild(row);
+			// -----------------------------------------------------
+			// TOGGLE WEEK
+			// -----------------------------------------------------
+			weekHeaderCell
+				.querySelector(".calendar-week-header")
+				.addEventListener("click", function () {
+					const collapsed =
+						row.style.display === "none";
+					row.style.display =
+						collapsed
+							? "table-row"
+							: "none";
+					document.getElementById(
+						`${weekId}-icon`
+					).textContent =
+						collapsed ? "▲" : "▼";
+				});
+			weekNumber++;
+		}
+		// =========================================================
+		// MOBILE SINGLE-COLUMN AGENDA
+		// =========================================================
+		weekNumber = 1;
+		for (
+			let startDay = 1 - firstDay;
+			startDay <= daysInMonth;
+			startDay += 7
+		) {
+			const weekId =
+				`mobile-week-${weekNumber}`;
+			// -----------------------------------------------------
+			// WEEK CONTAINER
+			// -----------------------------------------------------
+			const week =
+				document.createElement("div");
+			week.className =
+				"agenda-week";
+			// -----------------------------------------------------
+			// WEEK HEADER
+			// -----------------------------------------------------
+			const weekHeader =
+				document.createElement("div");
+			weekHeader.className =
+				"agenda-week-header";
+			weekHeader.innerHTML = `
+				<span>
+					Week ${weekNumber}
+				</span>
+				<span
+					id="${weekId}-icon"
+				>
+					▲
+				</span>
+			`;
+			week.appendChild(weekHeader);
+			// -----------------------------------------------------
+			// WEEK CONTENT
+			// -----------------------------------------------------
+			const weekContent =
+				document.createElement("div");
+			weekContent.id =
+				weekId;
+			// -----------------------------------------------------
+			// DAYS
+			// -----------------------------------------------------
+			for (let i = 0; i < 7; i++) {
+				const day =
+					startDay + i;
+				if (
+					day < 1 ||
+					day > daysInMonth
+				) {
+					continue;
+				}
+				const currentDate =
+					new Date(
+						year,
+						month - 1,
+						day
+					);
+				const dayEvents =
+					events.filter(
+						event => event.day === day
+					);
+				// -------------------------------------------------
+				// DAY CONTAINER
+				// -------------------------------------------------
+				const dayContainer =
+					document.createElement("div");
+				dayContainer.className =
+					"agenda-day";
+				// -------------------------------------------------
+				// TODAY
+				// -------------------------------------------------
+				const isToday =
+					today.getDate() === day &&
+					today.getMonth() === date.getMonth() &&
+					today.getFullYear() === date.getFullYear();
+				// -------------------------------------------------
+				// DATE HEADER
+				// -------------------------------------------------
+				const dateHeader =
+					document.createElement("div");
+				dateHeader.className =
+					"agenda-date" +
+					(isToday ? " today" : "");
+				const dayName =
+					currentDate.toLocaleDateString(
+						"en-US",
+						{
+							weekday: "short"
+						}
+					);
+				dateHeader.innerHTML = `
+					<span>
+						${dayName}
+					</span>
+					<span>
+						${day}
+					</span>
+				`;
+				dayContainer.appendChild(
+					dateHeader
+				);
+				// -------------------------------------------------
+				// EVENTS
+				// -------------------------------------------------
+				if (dayEvents.length > 0) {
+					dayEvents.forEach(event => {
+						const eventElement =
+							createEvent(event);
+						eventElement.classList.add(
+							"agenda-event"
+						);
+						dayContainer.appendChild(
+							eventElement
+						);
+					});
+				} else {
+					// No sessions
+					const empty =
+						document.createElement("div");
+					empty.className =
+						"agenda-empty";
+					empty.textContent =
+						"No sessions";
+					dayContainer.appendChild(
+						empty
+					);
+				}
+				weekContent.appendChild(
+					dayContainer
+				);
+			}
+			week.appendChild(
+				weekContent
+			);
+			// -----------------------------------------------------
+			// TOGGLE MOBILE WEEK
+			// -----------------------------------------------------
+			weekHeader.addEventListener(
+				"click",
+				function () {
+					const collapsed =
+						weekContent.style.display === "none";
+					weekContent.style.display =
+						collapsed
+							? "block"
+							: "none";
+					document.getElementById(
+						`${weekId}-icon`
+					).textContent =
+						collapsed ? "▲" : "▼";
+				}
+			);
+			mobileAgenda.appendChild(
+				week
+			);
+			weekNumber++;
+		}
+	}
+	// function loadCalendar() {
+	// 	const calendarBody = document.getElementById("calendarBody");
+	// 	calendarBody.innerHTML = "";
+	// 	const monthVal = $("#dtMonth").val();
+	// 	const [year, month] = monthVal.split("-").map(Number);
+	// 	const date = new Date(year, month - 1, 1);
+	// 	const today = new Date();
+	// 	const firstDay = date.getDay();
+	// 	const daysInMonth = new Date(
+	// 		date.getFullYear(),
+	// 		date.getMonth() + 1,
+	// 		0
+	// 	).getDate();
+	// 	let row = document.createElement("tr");
+	// 	const statusColors = {
+	// 		Scheduled: "#007bff",
+	// 		Completed: "#10B981",
+	// 		Cancel: "#dc3545"
+	// 	};
+	// 	// Empty cells before first day
+	// 	for (let i = 0; i < firstDay; i++) {
+	// 		row.appendChild(document.createElement("td"));
+	// 	}
+	// 	// Days
+	// 	for (let day = 1; day <= daysInMonth; day++) {
+	// 		const cell = document.createElement("td");
+	// 		cell.className = "calendar-day";
+	// 		// Highlight today
+	// 		if (
+	// 			today.getDate() === day &&
+	// 			today.getMonth() === date.getMonth() &&
+	// 			today.getFullYear() === date.getFullYear()
+	// 		) {
+	// 			cell.classList.add("blink");
+	// 		}
+	// 		// Day number
+	// 		const dayNumber = document.createElement("span");
+	// 		dayNumber.className = "day-number";
+	// 		dayNumber.textContent = day;
+	// 		cell.appendChild(dayNumber);
+	// 		// Events for this day
+	// 		const eventForDay = events.filter(event => event.day === day);
+	// 		   eventForDay.forEach(event => {
+	// 	const borderColor = statusColors[event.Stat] || "#10B981";
+	// 	const color = stringToColor(event.TutorID);
+	// 	const eventDiv = document.createElement("div");
+	// 	 eventDiv.className = "calendar-event";
+	// 	 if (event.Stat=="Cancel"){
+	// 			eventDiv.style.cssText = `
+	// 		background-size: 86px;
+	// background-position: right bottom;
+	// background-image: url(/dist/img/cancel.svg);
+	// background-repeat: no-repeat;
+	// border-left:4px solid ${borderColor};
+	// 		border-radius:6px;
+	// 		margin-bottom:6px;
+	// 		box-shadow:0 1px 2px rgba(0,0,0,.05);
+	// 		font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+	// 		overflow:hidden;text-align: left;`;
+	// 	 }else{
+	// 	eventDiv.style.cssText = `
+	// 	background: rgb(255, 255, 255);
+	// 	border-left:4px solid ${borderColor};
+	// 		border-radius:6px;
+	// 		margin-bottom:6px;
+	// 		box-shadow:0 1px 2px rgba(0,0,0,.05);
+	// 		font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+	// 		overflow:hidden;text-align: left;
+	// 	`;
+	// 	 }
+	// 	eventDiv.innerHTML = `
+	// 		<div style="
+	// 			padding:5px 7px;
+	// 			background:${color};
+	// 			color:#fff;
+	// 			font-size:.85rem;
+	// 			font-weight:500;
+	// 		">
+	// 			${event.StudentName}
+	// 		</div>
+	// 		<div style="padding:5px 7px">
+	// 			<div style="
+	// 				color:${color};
+	// 				font-size:.85rem;
+	// 				font-weight:600;
+	// 			">
+	// 				${event.tutor}
+	// 				<small style="
+	// 					color:${color};
+	// 					opacity: .75;
+	// 					font-size:.7rem;
+	// 					font-weight:500;
+	// 				">
+	// 					(${event.subjects})
+	// 				</small>
+	// 			</div>
+	// 			<div style="
+	// 				margin-top:3px;
+	// 				color:${color};
+	// 				font-size:.65rem;
+	// 				font-weight:600;
+	// 			">
+	// 				${event.Timings}
+	// 			</div>
+	// 			<div class="btn-div">
+	// 				<a class="feedback-btn"
+	// 					href="home/Feedback/${event.Id}"
+	// 					onclick="Feedback(${event.Id},this)"
+	// 					title="Click to add feedback"
+	// 					style="
+	// 						padding:2px 6px;
+	// 						background:${color};
+	// 						border-radius:4px;
+	// 						color:#fff;
+	// 						font-size:.7rem;
+	// 						font-weight:500;
+	// 						text-decoration:none;
+	// 					"
+	// 				>
+	// 					📝 Add Feedback
+	// 				</a>
+	// 			</div>
+	// 		</div>
+	// 	`;
+	// 	cell.appendChild(eventDiv);
+	// });
+	// 		row.appendChild(cell);
+	// 		// Complete week
+	// 		if ((firstDay + day) % 7 === 0) {
+	// 			calendarBody.appendChild(row);
+	// 			row = document.createElement("tr");
+	// 		}
+	// 	}
+	// 	// Fill remaining cells
+	// 	if (row.childNodes.length > 0) {
+	// 		while (row.childNodes.length < 7) {
+	// 			row.appendChild(document.createElement("td"));
+	// 		}
+	// 		calendarBody.appendChild(row);
+	// 	}
+	// }
+	document.addEventListener("DOMContentLoaded", function() {
+		loadCalendar();
+		loadDayView();
+	});
+	function dataTbl() {
+		if (!$.fn.DataTable.isDataTable('#tblCal')) {
+			$("#tblInvoices").DataTable({
+				"ordering": false,
+				"responsive": true,
+				searching: false,
+				paging: false,
+				info: false,
+				lengthChange: false
+			});
+		}
+	}
+		function stringToColor(id) {
+		const numericId = Math.abs(parseInt(id, 10));
+		let index= (numericId % 20) + 1;
+			const colors = [
+	"#0e84c2", "#82b74b", "#6366F1", "#ce17c0", "#F97316", "#14B8A6", "#0369A1",
+	"#3B82F6", "#804A00", "#EAB308", "#8B5CF6", "#311042", "#4B5563","#97a325", "#622569", "brown", "#009688", "#098519", "#673AB7", "#ff46ff","#ff700a"
+	 ];
+	 return colors[index];
+	}
+</script>

@@ -1,0 +1,68 @@
+﻿@using EHUB.Utilities
+@using System.Data
+@{
+    ViewData["Title"] = "Approve Levels";
+    ViewData["pgHeader"] = "Approve Levels Settings";
+}
+<style type="text/css">
+    .btnsh {
+        opacity: 0;
+    }
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+</style>
+<section class="content">
+    <div class="card">
+        <div class="card-body">
+            <div class="lvlst" style="display:none;">
+                <div class="row">
+                    <div class="col-md-4">
+                        <select class="form-control" asp-items="Model[0]" name="item">
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btnr btn btn-danger remove-btn"><i class="fa fa-close"></i></button>
+                    </div>
+                </div>
+            </div>
+            <form method="post">
+                <div id="lvfrm">
+                    @{
+                        int index = 0;
+                    }
+                    @foreach (DataRow item in Model[1])
+                    {
+                        <div class="row">
+                            <div class="col-md-4">
+                                <select class="form-control select2" asp-for="@item["approv_by"]" asp-items="Model[0]" name="item" id="@index">
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="button" class="btnr btn btn-danger remove-btn"><i class="fa fa-close"></i></button>
+                            </div>
+                        </div>
+                        index++;
+                    }
+                </div>
+                <br />
+                <div class="row">
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Save</button>
+                        <a id="btnAdd" class="btn btn-primary float-right"><i class="fa-solid fa-plus"></i> Add New Level</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+<script type="text/javascript">
+    $('#btnAdd').on('click', function () {
+        $('#lvfrm').append($('.lvlst').html());
+        $("#lvfrm select").last().addClass('select2');
+    $(".select2").select2();
+    });
+    $(document.body).on('click', ".remove-btn", function () {
+            $(this).closest('.row').remove();
+        });
+</script>

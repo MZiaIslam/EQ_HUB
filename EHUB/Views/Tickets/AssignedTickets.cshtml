@@ -1,0 +1,139 @@
+﻿@using EHUB.Utilities
+@{
+    ViewData["Title"] = "Assigned Tickets";
+    ViewData["pgHeader"] = "Assigned Ticket & Details";
+    AuthRights authRights = new AuthRights();
+    var chk = authRights.chk();
+    var uinfo = User.Claims.ToArray();
+}
+<style type="text/css">
+    .ft12 {
+        font-size: 12px;
+    }
+    .rd-opt {
+        float: left;
+        padding-right: 12px;
+    }
+</style>
+<section class="content">
+    @* 	@if (chk != "r" || chk != "")
+	{
+		<div class="col-md-6" style="margin-bottom: 10px;">
+			<a  id="btnAddTicket" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Ticket</a>
+		</div>
+	} *@
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <table class="table table-striped table-hover collapsed" id="tbtickets">
+                        <thead>
+                            <tr>
+                                <th>Ticket Title</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr onclick="Detials(@item.ticketid);">
+                                    <td style="cursor: pointer;">
+                                        <span class="direct-chat-timestamp">@item.Created.ToString("dd MMM yyyy hh:mm tt")</span>
+                                        <span class="badge @item.cls ft12 float-right">@item.stat</span><br />
+                                        <span class="text-md">@item.subject</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-8">
+                    <div class="direct-chat direct-chat-primary dtmessages">
+                        <div class="card-body" style="margin-top: 40px;">
+                            <div class="direct-chat-messages ticketinfo" style="height: auto;">
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <form id="frmMSG" method="post" asp-controller="Tickets" asp-action="AddMessage" enctype="multipart/form-data">
+                                <div class="input-group">
+                                    <textarea name="message" id="txtMessage" class="form-control" rows="3" required></textarea>
+                                    <input name="ticketid" id="ticketid" hidden />
+                                    <span class="input-group-append">
+                                        <button type="button" onclick="SendMessage();" id="btnSend" class="btn btn-primary">Send</button>
+                                    </span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="dgTicket" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">NEW TICKET</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmTicket" class="" method="post" asp-controller="Tickets" asp-action="AddTicket" enctype="multipart/form-data">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label>Title</label>
+                            <input type="text" name="subject" class="form-control" required />
+                        </div>
+                        <div class="col-md-12">
+                            <label>Description</label>
+                            <textarea name="details" class="form-control" rows="3" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Send</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $(function () {
+            $("#tbtickets").DataTable({
+                "ordering": true,
+                "responsive": true,
+            })
+        });
+        $(".dtmessages").hide();
+    });
+    $('#btnAddTicket').on('click', function () {
+        $('.frm').val('');
+        $('#dgTicket').modal("show");
+    });
+    function Detials(id) {
+        $.get("/Tickets/getTicketInfo?id=" + id).done(function (obj) {
+            $(".ticketinfo").html("");
+            for (const e of obj) {
+                let cls = (e.empid == "@(uinfo[2].Value)" ? "right" : "");
+                $(".ticketinfo").append('<div class="direct-chat-msg ' + cls + '"> <div class="direct-chat-infos clearfix"> <span class="direct-chat-name float-left">' + e.empname + '</span> <span class="direct-chat-timestamp float-right">' + e.created + '</span> </div><img class="direct-chat-img" src="/dist/img/StaffData/pics/' + e.empid + '.png" onerror="this.onerror=null;this.src=\'/dist/img/StaffData/pics/usr.png\';"  alt="message user image"><div class="direct-chat-text" style="white-space: pre-line;">' + (e.details) + '</div></div>');
+            }
+            $("#ticketid").val(id);
+            $(".dtmessages").show();
+        });
+    }
+    function SendMessage() {
+        $.post("/Tickets/AddMessage", $("#frmMSG").serialize()).done(function (data) {
+            Detials($("#ticketid").val());
+            $("#txtMessage").val('');
+        });
+    }
+    $('#tbtickets tr').each(function (a, b) {
+        $(b).click(function () {
+            $('#tbtickets tr').css('font-weight', 'normal').css('color', '#000');
+            $(this).css('font-weight', 'bold').css('color', '#2a327d');
+        });
+    });
+</script>

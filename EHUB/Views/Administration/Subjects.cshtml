@@ -1,0 +1,139 @@
+﻿@using EHUB.Utilities
+@using System.Data
+@{
+    ViewData["Title"] = "Subject Registration";
+    ViewData["pgHeader"] = "Add/Modify Subject";
+    AuthRights authRights = new AuthRights();
+    var chk = authRights.chk();
+}
+<style type="text/css">
+    .btnsh {
+        opacity: 0;
+    }
+    tr:hover .btnsh {
+        opacity: 1;
+    }
+</style>
+<section class="content">
+    @if (chk != "r" || chk != "")
+    {
+        <div class="col-md-6" style="margin-bottom: 10px;">
+            <a id="btnAdd" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Subject</a>
+        </div>
+    }
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <table id="tbDepart" class="table table-hover table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Subjects</th>
+                   
+                            </tr>
+                        </thead>
+                        <tbody id="tblDprt">
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                 
+                                    <td>
+                                        @item.Subject
+                                        <span class="btnsh">
+                                            @if (chk == "f")
+                                            {
+                                              @*   <a onclick="DelHead(@item.SubjectID)" class="btn btn-outline-danger btn-xs float-right" style="margin-left: 5px;"><i class="fa-solid fa-times"></i> Remove</a> *@
+                                                <a onclick="Edit('@item.Subject',@item.SubjectID)" class="btn btn-outline-success btn-xs float-right"><i class="fa-solid fa-pen"></i> Edit</a>
+                                                
+                                            }
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            
+            </div>
+        </div>
+    </div>
+</section>
+<div class="modal fade" id="dgAdd" style="display: none;">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Modify Subject</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="frmAdd" class="" method="post" asp-controller="Administration" asp-action="Subjects" enctype="multipart/form-data">
+                <div class="modal-body table-responsive">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <input type="hidden" value="0" id="SubjectID" name="SubjectID" class="frm" />
+                                    <label>Subject</label>
+                                    <input type="text" class="form-control frm" name="Subject" />
+                                </div>
+                           
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa fa-fw fa fa-save"></i>&nbsp;Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $('#btnAdd').on('click', function () {
+        $('.frm').val('');
+        $('#dgAdd').modal("show");
+    });
+    function DelHead(id){
+
+                Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.get("/Administration/DelSubject?id=" + id).done(function (ct) {
+                       if(ct>0){
+                           Swal.fire({
+                        title: "Not-Deleted!",
+                        text: "Subject is in use.",
+                        icon: "error"
+                    });
+                 
+               }else{
+    Swal.fire({
+                            title: "Deleted!",
+                            text: "Record has been deleted.",
+                            icon: "success"
+                        });
+                        location.href = "";
+               }
+                    
+                });
+            }
+        });
+             
+
+    }
+    function Edit(subj, subjid) {
+        $('.frm').val('');
+        $('[name=SubjectID]').val(subjid);
+        $('[name=Subject]').val(subj);
+        $('#dgAdd').modal("show");
+    }
+</script>

@@ -1,0 +1,742 @@
+﻿@using EHUB.Utilities
+@{
+    ViewData["Title"] = "Attendance Analyzer";
+    ViewData["pgHeader"] = "Attendance Data Report";
+    AuthRights authRights = new AuthRights();
+    var chk = authRights.chk();
+}
+<style type="text/css">
+    #btnExcel {
+        font-size: 12px;
+        line-height: 1.5;
+        font-family: 'Source Sans Pro','Helvetica Neue',Helvetica,Arial,sans-serif,FontAwesome;
+    }
+    table thead tr th {
+        background: #eaece9;
+    }
+    #vArea td {
+        text-align: center;
+    }
+    .Grd:hover {
+        cursor: pointer;
+    }
+    .dropfalse .btn {
+        color: #1b1b1b !important;
+        background-color: #f5f5f5;
+        border-color: #cecece;
+    }
+        .dropfalse .btn:hover {
+            color: #fff !important;
+            background-color: #ff821d;
+        }
+    .droptrue .btn {
+        color: #ffffff !important;
+        background-color: #ff821d;
+        border-color: #ffa567;
+    }
+    .ddColumn {
+        width: 100%;
+    }
+    .ddVlaue {
+        width: 100%;
+    }
+    .ranges li {
+        float: left;
+        margin: 1px 1px 1px 1px;
+    }
+    .delR {
+        background-image: url(/dist/img/close.ico);
+        background-repeat: no-repeat;
+        width: 20px;
+        margin-left: 20px;
+        cursor: pointer;
+        background-position-y: center;
+    }
+    .ranges li {
+        font-size: 13px;
+        padding: 3px 5px;
+    }
+    .h4 {
+        font-size: large;
+        border-bottom: 3px solid #2a327d;
+        color: #2a327d;
+    }
+    .rptP {
+        padding-top: 8px;
+    }
+</style>
+<section class="content">
+    @*     <div class="card">
+    <div class="card-body"> *@
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title">Report Columns & Parameters</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool prmhdr" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body rptP">
+                    <div class="row" id="spName" tag="usp_rptAttendData" data-sp1="usp_rptAttendData" data-sp2="usp_rptAttendData2" data-typ="0">
+                        <div class="col-md-12">
+                            <input type="checkbox" id="chart-type" data-toggle="toggle" data-on="<i class='fa-solid fa-arrow-right-arrow-left''></i> &nbsp;&nbsp;Pivot View" data-off="<i class='fa-solid fa-arrow-right-arrow-left''></i> &nbsp;&nbsp;Normal View" data-offstyle="primary" data-onstyle="success" data-size="mini" data-width="150" data-height="30.78">
+                        </div>
+                    </div>
+                    <div class="trpovt row" style="display: none;">
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="text">
+                                    Rows Field
+                                </label>
+                                <select id="ddCol" class="form-control">
+                                    <option value="EmpCode">Emp Code</option>
+                                    <option value="[Staff Name]">Staff Name</option>
+                                    <option value="Designation">Designation</option>
+                                    <option value="Department">Department</option>
+                                    <option value="[Sub-Department]">Sub-Department</option>
+                                    <option value="[Line Manager]">Line Manger</option>
+                                    <option value="Marital">Marital Status</option>
+                                    <option value="Gender">Gender</option>
+                                    <option value="[Attendance Date]">Attendance Date</option>
+                                    <option value="Month">Month</option>
+                                    <option value="Week">Week</option>
+                                    <option value="stat">Status</option>
+                                    <option value="inTime">In Time</option>
+                                    <option value="[Scheduled Hours]">Scheduled Hours</option>
+                                    <option value="oTime">Out Time</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="text">
+                                    Columns Field
+                                </label>
+                                <select id="ddRows" class="form-control">
+                                    <option value="EmpCode">Emp Code</option>
+                                    <option value="[Staff Name]">Staff Name</option>
+                                    <option value="Designation">Designation</option>
+                                    <option value="Department">Department</option>
+                                    <option value="[Sub-Department]">Sub-Department</option>
+                                    <option value="[Line Manager]">Line Manger</option>
+                                    <option value="Marital">Marital Status</option>
+                                    <option value="Gender">Gender</option>
+                                    <option value="[Attendance Date]">Attendance Date</option>
+                                    <option value="Month">Month</option>
+                                    <option value="Week">Week</option>
+                                    <option value="stat">Status</option>
+                                    <option value="inTime">In Time</option>
+                                    <option value="[Scheduled Hours]">Scheduled Hours</option>
+                                    <option value="oTime">Out Time</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="text">
+                                        Values Field
+                                    </label>
+                                    <div class="input-group mb-3">
+                                        <select id="ddData" class="form-control">
+                                            <option value="sum([Work Hours])[</br>Work Hours]">Work Hours</option>
+                                            <option value="sum(EarlyOut+LateIn)[</br>Total Late Min.]">Total Late Min.</option>
+                                            <option value="sum(LateIn)[</br>Late In]">Late In</option>
+                                            <option value="sum(EarlyOut)[</br>Early Out]">Early Out</option>
+                                            <option value="sum([Scheduled Hours])">Scheduled Hours</option>
+                                            <option value="sum(1)[</br>Count]">Count</option>
+                                        </select>
+                                        <span class="input-group-append" style="padding-left: 6px;">
+                                            <button type="button" class="btAdd btn btn-primary">
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="vArea" class="table table-hover table-sm">
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="trChart row" style="padding-top: 12px;">
+                        <div class="col-md-6">
+                            <div class="h4">Available Columns</div>
+                            <ul id="sortable1" class="dropfalse ranges nav">
+                                <li class="ui-state-default grp btn btn-xs" tag="[Attendance Date]">Attendance Date</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="inTime">In Time</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Month">Month</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Week">Week</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="rinTime">Office In</li>
+                                <li class="ui-state-default btn btn-xs" tag="sum(LateIn)">Late In</li>
+                                <li class="ui-state-default btn btn-xs" tag="sum([Work Hours])">Work Hours</li>
+                                <li class="ui-state-default btn btn-xs" tag="sum([Scheduled Hours])">Scheduled Hours</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="inip">IP In</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="oTime">Out Time</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="roTime">Office Out</li>
+                                <li class="ui-state-default btn btn-xs" tag="sum(EarlyOut)">Early Out</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="outip">IP Out</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="FatherName">Father Name</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="MobileNo">Mobile No</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Email">Email</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="[Line Manager]">Line Manager</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Marital">Marital</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Gender">Gender</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Religion">Religion</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Designation">Designation</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="[Sub-Department]">Sub-Department</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="Department">Department</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="stat">Status</li>
+                                <li class="ui-state-default btn btn-xs" tag="ROW_NUMBER() OVER(ORDER BY (SELECT 0))">S No.</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="h4">Report Columns</div>
+                            <ul id="sortable2" class="droptrue ranges nav">
+                                <li class="ui-state-default grp btn btn-xs" tag="EmpCode">Emp Code</li>
+                                <li class="ui-state-default grp btn btn-xs" tag="[Staff Name]">Staff Name</li>
+                                <li class="ui-state-default btn btn-xs" tag="count(1)">Count</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-12 row" style="padding-top: 5px;">
+                        <div class="table-responsive">
+                            <table id="tb-parm" class="table table-sm tb-css panel table-condensed table-hover">
+                                <thead style="font-size: 13px;">
+                                    <tr>
+                                        <th>&nbsp;<i class="me-2 text-primary fa fa-filter"></i></th>
+                                        <th style="width: 30%;">Column Name</th>
+                                        <th>Operator</th>
+                                        <th style="width: 70%;">Value</th>
+                                        <th>&nbsp;</th>
+                                        <th>&nbsp;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <select class="ddAR form-control" style="min-width: max-content;">
+                                                <option>AND</option>
+                                                <option>OR</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="ddColumn form-control">
+                                                <option></option>
+                                                <option value="EmpCode">Emp Code</option>
+                                                <option value="[Staff Name]">Staff Name</option>
+                                                <option value="Designation">Designation</option>
+                                                <option value="Department">Department</option>
+                                                <option value="[Sub-Department]">Sub-Department</option>
+                                                <option value="Marital">Marital Status</option>
+                                                <option value="Gender">Gender</option>
+                                                <option value="[Work Hours]">Work Hours</option>
+                                                <option value="[Attendance Date]">Attendance Date</option>
+                                                <option value="(EarlyOut+LateIn)">Total Late Min.</option>
+                                                <option value="LateIn">Late In</option>
+                                                <option value="EarlyOut">Early Out</option>
+                                                <option value="Month">Month</option>
+                                                <option value="stat">Status</option>
+                                                <option value="Week">Week</option>
+                                                <option value="[Scheduled Hours]">Scheduled Hours</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="ddOperator form-control" style="min-width: max-content;">
+                                                <option value="lk">ALike</option>
+                                                <option value="=">Equal to</option>
+                                                <option value=">">Greater than</option>
+                                                <option value="<=">Less than & equal</option>
+                                                <option value=">=">Greater than & equal</option>
+                                                <option value="<>">Not equal</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select class="ddVlaue form-control" style="min-width: 100px">
+                                                <option></option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btAd btn btn-success"><i class="fa fa-plus"></i></button>
+                                        <td>
+                                            <button type="button" class="btnr btn btn-danger"><i class="fa fa-close"></i></button>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="col-md-12" style="padding: 5px 1px;">
+                        <button type="button" id="btnShRpt" class="btn btn-primary btn-sm"><i class="fa fa-cogs"></i>&nbsp;Generate Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card card-default collapsed-card">
+                <div class="card-header">
+                    <h3 class="card-title">Reports Statistics</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button type="button" class="btn btn-tool rptdtl" data-card-widget="collapse">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body rptD" style="display:none">
+                    <div id="oResult" style="overflow: auto; min-height: 350px; width: 100%;">
+                    </div>
+                    <div>
+                        <input type="checkbox" id="chkT" data-toggle="toggle" data-on="Show Table" data-off="Hide Table" data-size="mini" data-width="100" data-height="30.78">
+                        <input type="checkbox" id="chkaddfilter" data-toggle="toggle" data-on="Show Filter" checked data-off="Hide Filter" data-size="mini" data-width="100" data-height="30.78">
+                        <input type="checkbox" id="chkC" data-toggle="toggle" data-on="Show Graph" checked data-off="Hide Graph" data-size="mini" data-width="100" data-height="30.78">
+                        <span id="cgrp" style="display:none">
+                            <input type="checkbox" id="chkXY" data-toggle="toggle" data-on="X axis" checked data-off="Y axis" data-size="mini" data-width="100" data-height="30.78">
+                            <button type="button" id="btnBar" class="btn btn-danger btn-sm"><i class="fa fa-bar-chart"></i>&nbsp;Bar Chart</button>
+                            <button type="button" id="btnPi" class="btn btn-danger btn-sm"><i class="fa fa-pie-chart"></i>&nbsp;Pie Chart</button>
+                            <button type="button" id="btnLine" class="btn btn-danger btn-sm"><i class="fa fa-line-chart"></i>&nbsp;Line Chart</button>
+                        </span>
+                        <button type="button" id="btsvRpt" class="btn btn-success btn-sm"><i class="fa fa-save"></i>&nbsp;Save Report</button>
+                        <button id='btnExport' class="btn btn-success btn-sm">
+                            <i class="fa fa-file-excel"></i>&nbsp;Export To Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+                var tb; var xy = ""; var axis = 0; var ctyp = "column";
+                $(document).ready(function () {
+                    var ddData;
+                    ListData("0");
+                    function ListData(s) {
+                        $.ajax({
+                            type: "POST",
+                            contentType: "application/json; charset=utf-8",
+                            url: "Lists",
+                            data: '{"s":"' + s + '"}',
+                            context: document.body,
+                            success: function (responseText) {
+                                ddData = $.parseJSON(responseText);
+                            }
+                        });
+                    }
+                    $('#chart-type').change(function () {
+                        if ($(this).prop('checked')) {
+                            $('.trpovt').show("slow"); $('.trChart').hide(); $('#spName').attr('tag', $('#spName').attr('data-sp2')); $('#spName').attr('data-typ', 1);
+                        } else {
+                            $('.trpovt').hide(); $('.trChart').show("slow"); $('#spName').attr('tag', $('#spName').attr('data-sp1')); $('#spName').attr('data-typ', 0);
+                        }
+                    });
+                    $(document.body).on('click', ".btAdd", function () {
+                        var row = '<tr tag="' + $("#ddData").val() + '"><td>' + $("#ddData :selected").text() + '</td><td><div class="delR">&nbsp;&nbsp;</div></td></tr>';
+                        $('#vArea tbody').html($('#vArea tbody').html() + row);
+                    });
+                    $(document.body).on('click', ".delR", function () {
+                        $(this).parent().parent().remove();
+                    });
+                    $(document.body).on('change', '.ddVlaue', function () {
+                        if ($(".ddColumn").val() == "ProjectID") {
+                            ListData($(".ddVlaue").val());
+                        }
+                    });
+                    $(document.body).on('change', '.ddColumn', function () {
+                        var col = $(this);
+                        if (col.val().match(/^.*Date.*$/)) {
+                            col.parent().parent().find('.ddVlaue').parent().html('<input type="date" class="ddVlaue form-control" />');
+                        } else {
+                            col.parent().parent().find('.ddVlaue').parent().html('<select class="ddVlaue form-control" style="min-width: 100px"></select>');
+                            var opts = "";
+                            if (ddData[col.val()] != undefined) {
+                                $.each(ddData[col.val()], function (i, item) {
+                                    opts = opts + '<option value="' + (item.val == undefined ? item.txt : item.val) + '">' + item.txt + '</option>';
+                                });
+                                col.parent().parent().find('.ddVlaue').html(opts);
+                                col.parent().parent().find('.ddVlaue').trigger('change');
+                                col.parent().parent().find('.ddVlaue').eComboBox();
+                                col.parent().parent().find('.ddVlaue option:contains({NEW ELEMENT})').remove();
+                            } else { col.parent().parent().find('.ddVlaue').html('<option>0</option>'); $(".ddVlaue").eComboBox(); }
+                        }
+                    });
+                    var PvtValues = ''; var Wheres = ""; var colmns = ''; var grps = '';
+                    $('#chkXY').parent().hide();
+                    $(".ddVlaue").eComboBox();
+                    $(document).on("click", ".btAd:last", function () {
+                        var row = '<tr>' + $('#tb-parm tbody  tr:last').html() + '</tr>';
+                        $('#tb-parm tbody  tr:last').after(row);
+                        $(".ddVlaue:last").eComboBox();
+                        $(".ddVlaue:last").html('<option></option>');
+                        //$(".ddColumn").on('change', function (e) {
+                        //    var opts = "";
+                        //    if (ddData[$(this).val()] != undefined) {
+                        //        $.each(ddData[$(this).val()], function (i, item) {
+                        //            opts = opts + '<option>' + item.txt + '</option>';
+                        //        });
+                        //        $(this).parent().parent().find('.ddVlaue').html(opts);
+                        //        $(this).parent().parent().find('.ddVlaue').eComboBox();
+                        //        $(this).parent().parent().find('.ddVlaue option:contains({NEW ELEMENT})').remove();
+                        //    } else { $(this).parent().parent().find('.ddVlaue').html('<option>0</option>'); $(".ddVlaue").eComboBox(); }
+                        //});
+                    });
+                    $(document).on("click", ".btnr", function () {
+                        if ($('#tb-parm tbody  tr').length > 1) {
+                            $(this).parent().parent().remove();
+                        }
+                    });
+                    $(document.body).on('click', '.card-header', function () {
+                        // $(".card-header").click(function (e, el) {
+                        // var index = $(".card-header").index($(this));
+                        //         if ($(".box-body").eq(index).is(":visible")) {
+                        //             $(".box-body").eq(index).hide(500);
+                        //         } else {
+                        //             $(".box-body").eq(index).show(500);
+                        //         }
+                        // $('.prmhdr').trigger('click');
+                    });
+                    $(document.body).on('click', '#sortable1 li', function () {
+                        if ($(this).parent()[0].nodeName === "SPAN") {
+                            $($(this).parent()).appendTo('#sortable2');
+                        } else {
+                            $(this).appendTo('#sortable2');
+                        }
+                    });
+                    $(document.body).on('click', '#sortable2 li', function () {
+                        if ($(this).parent()[0].nodeName === "SPAN") {
+                            $($(this).parent()).appendTo('#sortable1');
+                        } else {
+                            $(this).appendTo('#sortable1');
+                        }
+                    });
+                    $(function () {
+                        $("ul.droptrue").sortable({
+                            connectWith: "ul"
+                        });
+                        $("ul.dropfalse").sortable({
+                            connectWith: "ul"
+                        });
+                        $("#sortable1, #sortable2, #sortable3").disableSelection();
+                    });
+                    $("#btnShRpt").click(function (e) {
+                        PvtValues = ''; Wheres = ""; colmns = ''; grps = '';
+                        for (i = 0; i < $('#sortable2 li').length; i++) {
+                            colmns = colmns + ',' + $($('#sortable2 li')[i]).attr('tag') + ' as [' + $('#sortable2 li')[i].innerHTML + ']';
+                            if ($($('#sortable2 li')[i]).hasClass('grp')) {
+                                grps = grps + ',' + $($('#sortable2 li')[i]).attr('tag');
+                            }
+                        }
+                        $('#vArea tr').each(function () {
+                            PvtValues = PvtValues + "," + $(this).attr('tag');
+                        });
+                        $('#tb-parm tbody tr').each(function () {
+                            if (($(this).children().find('.ddVlaue').val() != "") && ($(this).children().find('.ddVlaue').val() != "{NEW ELEMENT}")) {
+                                if ($(this).children().find('.ddVlaue').val() != null) {
+                                    if (($(this).children().find('.ddOperator')).find('option:selected').text() == "Alike") {
+                                        Wheres = Wheres + $(this).children().find('.ddAR').val() + "  " + $(this).children().find('.ddColumn').val() + $(this).children().find('.ddOperator').val() + "''" + $(this).children().find('.ddVlaue').val() + "''";
+                                    } else {
+                                                     Wheres = Wheres + $(this).children().find('.ddAR').val() + "  " + $(this).children().find('.ddColumn').val() + $(this).children().find('.ddOperator').val() + (($(this).children().find('.ddColumn').val()).indexOf('Date') !== -1 ? "convert(date,''" + ($(this).children().find('.ddVlaue').val()) + "'')" : "''" + ($(this).children().find('.ddVlaue').val()) + "''");
+                                    }
+                                }
+                            }
+                        });
+                        if (Wheres != "") {
+                            Wheres = "WHERE " + Wheres.substring(4);
+                        }
+                        if ($('#spName').attr('data-typ') == "1") {
+                            grps = "0" + $('#ddRows').val() + "'',''" + (PvtValues == "" ? $('#ddData').val() : PvtValues.substring(1));
+                            colmns = "1" + $('#ddCol').val();
+                            Wheres = Wheres.replace(/'/g, '\'\'');
+                        }
+                        loadRpts(grps, colmns, Wheres);
+                        $('.prmhdr').trigger('click');
+                        // $('.rptdtl').trigger('click');
+                    });
+                    $(function () {
+                        $('#chkT').change(function () {
+                            if ($(this).prop('checked')) {
+                                $('#chrt-tb1').hide();
+                            } else {
+                                $('#chrt-tb1').show();
+                            }
+                        });
+                        $('#chkC').change(function () {
+                            if ($(this).prop('checked')) {
+                                $('.highcharts-container').hide();
+                                $('#chkXY').parent().hide(); $('#cgrp').hide();
+                            } else {
+                                $('.highcharts-container').show(); $('#chkXY').parent().show(); $('#cgrp').show();
+                            }
+                        });
+                        var table;
+                        $('#chkaddfilter').change(function () {
+                            if ($(this).prop('checked')) {
+                                table.destroy();
+                            } else {
+                                table = new DataTable('#chrt-tb1');
+                            }
+                        });
+                        $('#chkXY').change(function () {
+                            if ($(this).prop('checked')) {
+                                xy = ""; axis = 1;
+                                loadRpts(grps, colmns, Wheres);
+                                $('.highcharts-container').show();
+                            } else {
+                                xy = "1"; axis = 1;
+                                loadRpts(grps, colmns, Wheres);
+                                $('.highcharts-container').show();
+                            }
+                        });
+                    })
+                    $("#btnBar").click(function (e) {
+                        ctyp = "column"; axis = 1;
+                        loadRpts(grps, colmns, Wheres);
+                    });
+                    $("#btnPi").click(function (e) {
+                        ctyp = "pie"; axis = 1;
+                        loadRpts(grps, colmns, Wheres);
+                    });
+                    $("#btsvRpt").click(function (e) {
+                        $('#modal-svbox').modal('show');
+                    });
+                    $("#btnLine").click(function (e) {
+                        ctyp = "line"; axis = 1;
+                        loadRpts(grps, colmns, Wheres);
+                    });
+                    $("#adSec").hide();
+                    $(".chkc").click(function () {
+                        if ($('#ys').is(':checked')) { $("#newRpt").show(); $("#adSec").hide(); $("#add-rpt").html('Save Report'); } else {
+                            $("#newRpt").hide(); $("#adSec").show(); $("#add-rpt").html('Add Section');
+                            $.ajax({
+                                url: "/Leaves/ReportList",
+                                context: document.body,
+                                success: function (responseText) {
+                                    $('#ddRpts').html(responseText);
+                                }
+                            });
+                        }
+                    });
+                    $("#add-rpt").on('click', function (e) {
+                        var tbv = 0, chrt = 0;
+                        if ($("#chrt-tb1").is(":visible")) {
+                            tbv = 1;
+                        } else { tbv = 0; }
+                        if ($('.highcharts-container').is(":visible")) {
+                            chrt = 1;
+                        } else { chrt = 0; }
+                        if ($("#add-rpt").html() == "Save Report") {
+                            if ($('#txtTitle').val() == "") {
+                                msgbox("Please enter Report Title ");
+                                return false;
+                            }
+                            var dataIN = "Ï''" + $('#spName').attr('tag') + "'',''" + grps.substring(1).replace(/'/g, "''") + "'',''" + colmns.substring(1) + "'',''" + $("#txtRemars").val() + "'',''0'',''" + Wheres.replace(/'/g, '\'\'').replace("lk'", " like '").replace(/''''''''/g, "''''") + "'',''" + tbv + "'',''0'',''" + xy + "'',''" + ctyp + "'',''0'',''" + chrt + "''Î:" + $("#txtTitle").val() + ":" + $('#chkdshb').prop('checked') + ":0";
+                            $.ajax({
+                                url: "/Leaves/SaveReport?info=" + encodeURIComponent(dataIN),
+                                context: document.body,
+                                success: function (responseText) {
+                                    $('#modal-svbox').modal('hide');
+                                }
+                            });
+                        } else {
+                            if ($('#ddRpts').val() == null) {
+                                msgbox("Please select Report Title ");
+                                return false;
+                            }
+                            var dataIN = "'" + $('#spName').attr('tag') + "','" + grps.substring(1).replace(/'/g, "''") + "','" + colmns.substring(1) + "','" + $("#txtRemars").val() + "','0','" + Wheres.replace(/'/g, '\'\'').replace("lk'", " like '").replace(/''''''''/g, "''''") + "','" + tbv + "','0','" + xy + "','" + ctyp + "','0'," + $("#ddRpts").val() + ",'" + chrt + "')";
+                            $.ajax({
+                                url: "/Leaves/SaveSection?info=" + encodeURIComponent(dataIN),
+                                context: document.body,
+                                success: function (responseText) {
+                                    $('#modal-svbox').modal('hide');
+                                }
+                            });
+                        }
+                    });
+                });
+                function loadRpts(grps, colmns, Wheres) {
+                    $('#oResult').html('');
+                    if ($('.rptD').is(':visible') == false) { $('.rptdtl').trigger('click'); }
+                    // $('.rptD').show();
+                    // $('.rptP').hide();
+                    //NProgress.start();
+                    $.ajax({
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        url: "/Leaves/ReportDTLs",
+                        data: '{"RptID":"","width":"' + $('#oResult').width() + '","xy":"' + xy + '","ctyp":"' + ctyp + '"}',
+                        success: function (responseText) {
+                            var dtlData = (responseText).split('¦');
+                            $.each(dtlData, function (index, value) {
+                                if (value != "") {
+                                    var rptSec = value.split('|');
+                                    $('#oResult').html($('#oResult').html() + "<div class='dtlD' style='float: left;min-height:" + rptSec[12] + "px;min-width:" + rptSec[13] + "px;'><div class='titG' id=t" + rptSec[10] + " class='tRpt'>" + decodeURIComponent(rptSec[3]) + "</div><div style='margin-left: 20px;'></div><div id='c" + rptSec[10] + "' class='chrt' style='margin-left: 90px;margin-bottom: 20px;margin-top: 20px;'></div>");
+                                    if (rptSec[8] == 'y') {
+                                        //$("#preloader2").show();
+                                        $.ajax({
+                                            type: "POST",
+                                            contentType: "application/json; charset=utf-8",
+                                            url: "/Leaves/ReportData",
+                                            data: '{"sp":"' + $('#spName').attr('tag') + '","Grps":"' + encodeURIComponent(grps.substring(1)) + '","Columns":"' + encodeURIComponent(colmns.substring(1)) + '","Wheres":"' + encodeURIComponent(Wheres) + '","ID":"' + rptSec[10] + '","xy":"' + rptSec[1] + '"}',
+                                            success: function (responseText) {
+                                                $("#c" + rptSec[10]).html(responseText);
+                                                if (rptSec[11] == '1') {
+                                                    if (rptSec[9] == "pie") {
+                                                        $("#chrt-tb" + rptSec[10]).attr('data-graph-datalabels-enabled', '1');
+                                                        $('#chrt-tb' + rptSec[10] + ' tbody tr').each(function () {
+                                                            $('td:nth-child(2)', this).attr('data-graph-name', $(':nth-child(1)', this).html());
+                                                        });
+                                                    }
+                                                    tb = $("#chrt-tb" + rptSec[10]);
+                                                    tb.attr('data-graph-height', rptSec[12]);
+                                                    tb.attr('data-graph-type', rptSec[9]); tb.attr('data-graph-container-before', '1');
+                                                    if (rptSec[5] == '1') {
+                                                        tb.attr('data-graph-inverted', '1');
+                                                        tb.attr('data-graph-xaxis-labels-enabled', '1');
+                                                    }
+                                                    if (rptSec[1] == '1') {
+                                                        tb.attr('data-graph-yaxis-1-stacklabels-enabled', '1');
+                                                    }
+                                                    tb.highchartTable();
+                                                    $("#c" + rptSec[10]).css('margin-left', '0px').css('width', '100%');
+                                                    //$("#chrt-tb" + rptSec[10]).css('margin-left', '20px');
+                                                    $(".chrt-tb" + rptSec[10]).css('overflow', 'auto').css('width', '100%');
+                                                    $('defs').next().hide();
+                                                    window.dispatchEvent(new Event('resize'));
+                                                    if (axis == 0) {
+                                                        $('.highcharts-container').hide();
+                                                    }
+                                                } else { $("#c" + rptSec[10]).css('margin-left', '0px'); }
+                                                //sumTable("chrt-tb" + rptSec[10]);
+                                                //if (rptSec[6] == 0) { tb.hide(); } else {
+                                                $('#chrt-tb' + rptSec[10] + ' td').each(function () {
+                                                    if ($.isNumeric($(this).html())) {
+                                                        //$(this).html(FormatNum($(this).html()) + ""); $(this).css('text-align', 'right');
+                                                    }
+                                                    $(this).html($(this).html().replace(",.", "."));
+                                                });
+                                                //}
+                                                if ($('#chkT').prop('checked')) {
+                                                    $('#chrt-tb1').hide();
+                                                } else {
+                                                    $('#chrt-tb1').show();
+                                                    // $(function () {
+                                                    //     $("#chrt-tb1").DataTable({
+                                                    //         "ordering": true,
+                                                    //         "responsive": true,
+                                                    //     })
+                                                    // });
+                                                }
+                                                //if (index == 9) { $("#preloader2").hide(); clearInterval(interval); }
+                                                $('text').each(function () {
+                                                    if (($(this).html().replace(",", "")) == ($('th:contains(AV)').attr('tag'))) {
+                                                        $(this).html("");
+                                                    }
+                                                });
+                                                //NProgress.done();
+                                                //NProgress.remove();
+                                            }
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+                function FormatNum(num) {
+                    var p = num.toString().split(".");
+                    var d = "";
+                    if (p[1] != undefined) {
+                        d = "." + p[1];
+                    }
+        return "" + p[0].split("").reverse().reduce(function (acc, num, i, orig) {
+                        return num + (i && !(i % 3) ? "," : "") + acc;
+                    }, "") + d;
+                }
+    </script>
+    <div class="modal fade" id="modal-svbox" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Save Report</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td>
+                                <div class="radio">
+                                    <label>
+                                        <input class="chkc" id="ys" type="radio" name="opt" checked="checked" />
+                                        <i class="fa fa-2x icon-radio"></i>
+                                        New Report
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="radio">
+                                    <label>
+                                        <input class="chkc" id="na" name="opt" type="radio" />
+                                        <i class="fa fa-2x icon-radio"></i>
+                                        Add New Section to Report
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div id="newRpt">
+                                    <div class="form-group">
+                                        <label for="txtTitle" class="col-sm-12 control-label">Report Title :</label>
+                                        <div class="col-sm-12">
+                                            <input id="txtTitle" type="text" maxlength="250" class="form-control" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="txtRemars" class="col-sm-12 control-label">Remarks :</label>
+                                        <div class="col-sm-12">
+                                            <input id="txtRemars" type="text" maxlength="250" class="form-control" /><br />
+                                        </div>
+                                    </div>
+                                    <input id="chkdshb" type="checkbox" style="display: none" />
+                                </div>
+                                <div id="adSec">
+                                    <div class="form-group">
+                                        <label for="ddRpts" class="col-sm-12 control-label">Report :</label>
+                                        <div class="col-sm-12">
+                                            <select id="ddRpts" class="form-control">
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="add-rpt" class="btn btn-primary">Save Report</button>
+                </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#btnExport').on('click', function () {
+                $("#chrt-tb1").table2excel({
+                    filename: "attendanceData.xls"
+                });
+            });
+        });
+    </script>
+    <script type="text/javascript" src="//cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js">
+    </script>
+</section>

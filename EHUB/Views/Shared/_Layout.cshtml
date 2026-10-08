@@ -1,0 +1,475 @@
+﻿@using EHUB.Models.Home
+@using EHUB.Utilities
+@inject IHttpContextAccessor Accessor
+@inject Menu _menu
+@{
+	var uinfo = User.Claims.ToArray();
+	var gId = uinfo[3].Value;
+	var m = _menu.GetMenu(gId);
+	var sm = _menu.GetSMenu(gId);
+	// var rq = _menu.GetRequest(gId);
+	var lowSessions =
+	  ViewBag.LowSessionNotifications as IEnumerable<LowSessionNotification>
+	  ?? Enumerable.Empty<LowSessionNotification>();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>@ViewData["Title"] - EHUB</title>
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="~/plugins/fontawesome-free/css/all.min.css">
+	<!-- Ionicons -->
+	<link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+	<!-- Tempusdominus Bootstrap 4 -->
+	<link rel="stylesheet" href="~/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+	<!-- JQVMap -->
+	<link rel="stylesheet" href="~/plugins/jqvmap/jqvmap.min.css">
+	<link href="~/dist/css/EHUB/icheck-bootstrap.min.css" rel="stylesheet" />
+	<!-- overlayScrollbars -->
+	<link rel="stylesheet" href="~/plugins/overlayScrollbars/css/OverlayScrollbars.min.css">
+	<!-- Daterange picker -->
+	<link rel="stylesheet" href="~/plugins/daterangepicker/daterangepicker.css">
+	<!-- summernote -->
+	<link rel="stylesheet" href="~/plugins/summernote/summernote-bs4.min.css">
+	<link href="~/plugins/select2/css/select2.min.css" rel="stylesheet" />
+	<!-- DataTables -->
+	<link rel="stylesheet" href="~/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+	<link rel="stylesheet" href="~/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+	<link rel="stylesheet" href="~/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+	<!-- Theme style -->
+	<link href="~/dist/css/EHUB/EHUB.min.css" rel="stylesheet" />
+	<link href="~/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet" />
+	<style>
+		/* Style for the password strength message */
+		.strength-message {
+			color: red;
+		}
+		/*  ### CSS */
+		/* Notification Dropdown */
+		.notification-dropdown {
+			width: 420px;
+			max-height: 600px;
+			overflow-y: auto;
+			padding: 0;
+		}
+			/* Header */
+			.notification-dropdown .dropdown-header {
+				padding: 8px 8px;
+				font-size: 14px;
+				font-weight: 600;
+				background: #f8f9fa;
+				border-bottom: 1px solid #dee2e6;
+			}
+		/* Notification Card */
+		.notification-card {
+			padding: 14px 16px;
+			background: #fff;
+			transition: background-color 0.2s ease;
+		}
+			.notification-card:hover {
+				background-color: #f8f9fa;
+			}
+		/* Student Icon */
+		.notification-icon {
+			width: 42px;
+			height: 42px;
+			min-width: 42px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #fff;
+			margin-right: 12px;
+		}
+			.notification-icon.bg-warning {
+				background-color: #ffc107;
+			}
+		/* Content */
+		.notification-content {
+			flex: 1;
+			min-width: 0;
+		}
+		.student-name {
+			font-size: 15px;
+			font-weight: 600;
+			color: #343a40;
+			margin-bottom: 4px;
+		}
+		.notification-content .small {
+			line-height: 1.4;
+		}
+		/* Warning */
+		.session-warning {
+			display: inline-block;
+			background: #fff3cd;
+			color: #856404;
+			border: 1px solid #ffeeba;
+			border-radius: 4px;
+			padding: 4px 8px;
+			font-size: 12px;
+			font-weight: 500;
+		}
+		/* Buttons */
+		.notification-actions {
+			display: flex;
+			gap: 8px;
+		}
+			.notification-actions .btn {
+				font-size: 12px;
+			}
+		/* Footer */
+		.notification-dropdown .dropdown-footer {
+			padding: 12px;
+			text-align: center;
+			font-weight: 500;
+			color: #007bff;
+			background: #f8f9fa;
+		}
+			.notification-dropdown .dropdown-footer:hover {
+				background: #e9ecef;
+			}
+		/* Badge */
+		.navbar-badge {
+			font-size: 10px;
+			font-weight: 600;
+		}
+		/* Mobile */
+		@@media (max-width: 576px) {
+			.notification-dropdown {
+				width: 320px;
+				max-width: calc(100vw - 20px);
+			}
+			.notification-actions {
+				padding-left: 0;
+				flex-direction: column;
+			}
+				.notification-actions .btn {
+					width: 100%;
+				}
+		}
+	</style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed text-sm">
+	<div class="wrapper">
+		<div class="preloader flex-column justify-content-center align-items-center" style="background: #f4f6f9e3;">
+			<div class="overlay">
+				<img src="~/dist/img/wave.gif" style="height: 200px;" /><div class="text-bold pt-2" style="text-align: center;margin-top: -114px;">
+					Loading...
+				</div>
+			</div>
+		</div>
+		<nav class="main-header navbar navbar-expand navbar-white navbar-light">
+			<ul class="navbar-nav">
+				<li class="nav-item">
+					<a class="nav-link sidebar-toggle" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+				</li>
+				<span style="padding-top: 5px;margin-bottom: 0;">
+					@ViewData["Title"]
+				</span>
+			</ul>
+			<ul class="navbar-nav ml-auto">
+				<li class="nav-item dropdown">
+					<a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
+						<i class="far fa-bell"></i>
+						@{
+							var notificationCount = lowSessions?.Count() ?? 0;
+						}
+						@if (notificationCount > 0)
+						{
+							<span class="badge badge-danger navbar-badge"> @notificationCount </span>
+						}
+					</a> <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right notification-dropdown" style="left: inherit; right: 0px;">
+						<span class="dropdown-item dropdown-header">
+							<i class="fas fa-exclamation-circle text-warning mr-1"></i>
+							@notificationCount Low Session @(notificationCount == 1 ? "Notification" : "Notifications")
+						</span>
+						@if (lowSessions != null && lowSessions.Any())
+						{
+							foreach (var item in lowSessions)
+							{
+								<div class="dropdown-divider"></div>
+								<!-- Notification -->
+								<div class="notification-card">
+									<div class="d-flex align-items-start">
+										<!-- Student Icon -->
+										<div class="notification-icon bg-warning"> <i class="fas fa-user-graduate"></i> </div>
+										<!-- Student Information -->
+										<div class="notification-content">
+											<div class="student-name"> @item.StudentName </div>
+											<div class="text-muted small"> <i class="fas fa-user mr-1"></i> Guardian: <strong>@item.Guardian</strong> </div>
+										</div>
+									</div>
+									<div class="text-muted small mt-1"> <i class="fas fa-user-friends mr-1"></i> @item.Relationship <span class="mx-1">•</span> <i class="fas fa-phone mr-1"></i> @item.CellNo </div>
+									<!-- Warning -->
+									<div class="session-warning mt-1">
+										<i class="fas fa-exclamation-triangle mr-1"></i>
+										Only <strong>@item.SessionCount session(s)</strong>
+										<span class="mx-1">•</span>
+										@item.ScheduledHours.ToString("0.##") hour(s) remaining
+									</div>
+									<!-- Action Buttons --> <div class="notification-actions mt-2">
+										<a href="@Url.Action("EditSchedule", "Session", new { id = item.SessionID })" style="display: inline-flex;align-items: center;"
+										   class="btn btn-sm btn-primary">
+											<i class="fas fa-plus mr-1"></i><small>Add Schedule</small>
+										</a> <a href="@Url.Action("BillingPayments", "Session")?id=@item.StudentID" style="display: inline-flex;align-items: center;" class="btn btn-sm btn-success"> <i class="fas fa-file-invoice-dollar mr-1"></i><small>Generate Invoice</small>  </a>
+									</div>
+								</div>
+							}
+						}
+						else
+						{
+							<!-- No Notifications -->
+							<div class="text-center p-4"> <div class="mb-2"> <i class="fas fa-check-circle text-success" style="font-size:35px;"></i> </div> <strong>All Good!</strong> <div class="text-muted small mt-1"> No students have low scheduled sessions. </div> </div>
+						}
+						@*            @if (notificationCount > 0)
+							{
+								<div class="dropdown-divider"></div>
+								<a href="@Url.Action("LowSessionStudents", "Sessions")" class="dropdown-item dropdown-footer"> <i class="fas fa-list mr-1"></i> View All Low Session Students </a>
+							} *@
+					</div>
+				</li>
+				<li class="nav-item dropdown user-menu">
+					<a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+						<img src="~/dist/img/@uinfo[5].Value/pics/@(uinfo[2].Value).png" onerror="this.onerror=null;this.src='/dist/img/StaffData/pics/usr.png';" class="user-image img-circle elevation-2" alt="User Image">
+						<span class="d-none d-md-inline">@uinfo[0].Value</span>
+					</a>
+					<ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="left: inherit; right: 0px;">
+						<!-- User image -->
+						<li class="user-header">
+							<img src="~/dist/img/@uinfo[5].Value/pics/@(uinfo[2].Value).png" onerror="this.onerror=null;this.src='/dist/img/StaffData/pics/usr.png';" class="img-circle elevation-2" alt="User Image">
+							<p>
+								@uinfo[0].Value
+							   <small>@Html.Raw(uinfo[4].Value)</small>
+									<a class="text-sm float-right" data-toggle="modal" data-target="#dgChangePass" style="cursor: pointer;">Change Password</a>
+							</p>
+						</li><br/><br/>
+						<li class="user-footer">
+							<a asp-controller="Login" asp-action="Logout" class=" btn btn-danger float-right btn-sm"><i class="fa-solid fa-power-off"></i> Sign out</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+		<aside class="main-sidebar sidebar-light-primary elevation-4">
+			<a href="\" class="brand-link" style="text-align: center;padding: 9.4px;">
+				<img src="~/dist/img/eqhub.png" alt="eqhub" class="logsize">
+			</a>
+			<div class="sidebar">
+				<div class="user-panel d-flex" style="background: aliceblue;">
+					<div class="image">
+						<img src="~/dist/img/@uinfo[5].Value/pics/@(uinfo[2].Value).png" onerror="this.onerror=null;this.src='/dist/img/StaffData/pics/usr.png';" class="img-circle elevation-2" alt="User Image" style="width: 2.5rem;">
+					</div>
+					<div class="info" style="line-height: 1;">
+						<span href="#" class="d-block" style="font-size: 17px;color: #2a327d;">@uinfo[0].Value</span>
+						<span href="#" class="d-block" style="font-size: small;">@Html.Raw(uinfo[4].Value)</span>
+					</div>
+				</div>
+				<nav class="mt-2">
+					<ul class="nav nav-pills nav-sidebar flex-column nav-flat nav-child-indent" data-widget="treeview" role="menu" data-accordion="false">
+						@{
+							for (int i = 0; i < m.Count(); i++)
+							{
+								if (m[i].pgaction == "")
+								{
+									<li class="nav-item">
+										<a href="#" class="nav-link">
+											<i class="nav-icon fas @m[i].icon"></i>
+											<p>
+												@m[i].pgname
+												<i class="right fas fa-angle-left"></i>
+											</p>
+										</a>
+										<ul class="nav nav-treeview" style="background: aliceblue;">
+											@for (int s = 0; s < sm.Count(); s++)
+											{
+												if (@m[i].Id == @sm[s].Id)
+												{
+													<li class="nav-item">
+														<a asp-controller="@sm[s].pgcontroller" asp-action="@sm[s].pgaction" class="nav-link @(ViewData["Title"].ToString() == sm[s].pgname ? "active opt-act" : "")">
+															<i class="fas @sm[s].icon nav-icon @(ViewData["Title"].ToString() == sm[s].pgname ? "fa-beat" : "")"></i>
+															<p>@sm[s].pgname</p>
+														</a>
+													</li>
+												}
+											}
+										</ul>
+									</li>
+								}
+								else
+								{
+									<li class="nav-item">
+										<a asp-controller="@m[i].pgcontroller" asp-action="@m[i].pgaction" class="nav-link @(ViewData["Title"].ToString() == m[i].pgname ? "active" : "")">
+											<i class="nav-icon @(ViewData["Title"].ToString() == m[i].pgname ? "fa-beat-fade" : "") fas @m[i].icon"></i>
+											<p>
+												@m[i].pgname
+											</p>
+										</a>
+									</li>
+								}
+							}
+						}
+					</ul>
+				</nav>
+			</div>
+		</aside>
+		<div class="content-wrapper">
+			<div class="content-header" style="padding: 10px 0.5rem 0px 0.5rem;">
+				<div class="container-fluid">
+					<div class="row mb-2">
+						<div class="col-sm-6" style="font-size: 24px;font-variant-caps: petite-caps;color: #2a327d;text-shadow: 0 0 10px #2a74b6;">
+							@Html.Raw(ViewData["pgHeader"])
+						</div>
+						<div class="col-sm-6">
+							<ol class="breadcrumb float-sm-right">
+								<li class="breadcrumb-item"><a href="#">Home</a></li>
+								<li class="breadcrumb-item active">@ViewData["Title"]</li>
+							</ol>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal" id="dgChangePass" style="display: none;">
+				<div class="modal-dialog" style="width: 350px;">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Change Password</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<div class="form-group has-feedback" style="margin-bottom: 10px;">
+								<input id="txtPass" onkeyup="checkPasswordStrength(this)" type="password" class="form-control" placeholder="Password" required>
+							</div>
+							<div class="form-group has-feedback">
+								<input id="txtRPass" type="password" class="form-control" placeholder="Retype password" required>
+							</div>
+							<div class="strength-message"></div>
+							<div class="alert alert-warning alert-dismissible" style="display: none">
+								<span id="ptext"></span>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button id="btnChgPass" type="button" class="btn btn-danger">Change Password</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<section class="content">
+				<div class="container-fluid">
+					<!-- jQuery -->
+					<script src="~/plugins/jquery/jquery.min.js"></script>
+					<!-- jQuery UI 1.11.4 -->
+					<script src="~/plugins/jquery-ui/jquery-ui.min.js"></script>
+					<script src="~/plugins/jquery/jquery.number.js"></script>
+					<!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
+					<script>
+						$.widget.bridge('uibutton', $.ui.button)
+					</script>
+					<!-- Bootstrap 4 -->
+					<script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+					<!-- ChartJS -->
+					<script src="~/plugins/chart.js/Chart.min.js"></script>
+					<!-- Sparkline -->
+					<script src="~/plugins/sparklines/sparkline.js"></script>
+					<!-- JQVMap -->
+					<script src="~/plugins/jqvmap/jquery.vmap.min.js"></script>
+					<script src="~/plugins/jqvmap/maps/jquery.vmap.usa.js"></script>
+					<!-- jQuery Knob Chart -->
+					<script src="~/plugins/jquery-knob/jquery.knob.min.js"></script>
+					<!-- daterangepicker -->
+					<script src="~/plugins/moment/moment.min.js"></script>
+					<script src="~/plugins/daterangepicker/daterangepicker.js"></script>
+					<!-- Tempusdominus Bootstrap 4 -->
+					<script src="~/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+					<!-- Summernote -->
+					<script src="~/plugins/summernote/summernote-bs4.min.js"></script>
+					<script src="~/plugins/bootstrap/js/bootstrap-toggle.min.js"></script>
+					<!-- overlayScrollbars -->
+					<script src="~/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js"></script>
+					<!-- AdminLTE App -->
+					<script src="~/dist/js/adminlte.js"></script>
+					<!-- DataTables  & Plugins -->
+					<script src="~/plugins/datatables/jquery.dataTables.min.js"></script>
+					<script src="~/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+					<script src="~/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+					<script src="~/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+					<script src="~/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+					<script src="~/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+					<script src="~/plugins/reportview/highcharts.js"></script>
+					<script src="~/plugins/reportview/jquery.highcharttable.js"></script>
+					<script src="~/plugins/jszip/jszip.min.js"></script>
+					<script src="~/plugins/pdfmake/pdfmake.min.js"></script>
+					<script src="~/plugins/pdfmake/vfs_fonts.js"></script>
+					<script src="~/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+					<script src="~/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+					<script src="~/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+					<script src="~/plugins/select2/js/select2.full.min.js"></script>
+					<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+					<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+					<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+					<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+					@RenderBody()
+				</div>
+			</section>
+		</div>
+		<footer class="main-footer">
+			<strong>Copyright &copy; @DateTime.Now.ToString("yyyy") <a href="\">EQUATION HUB</a> </strong>
+			All rights reserved.
+			<div class="float-right d-none d-sm-inline-block">
+				<b>Version</b> 1.0.0
+			</div>
+		</footer>
+		<aside class="control-sidebar control-sidebar-dark">
+		</aside>
+	</div>
+	<script type="text/javascript">
+		$($("a.opt-act")[0]).parents('ul').css('display', 'block');
+		$($("a.opt-act")[0]).parents('li').addClass('menu-is-opening menu-open');
+		$($("a.opt-act")[0]).parent().parent().parent().children("a").addClass('active');
+	</script>
+	<script src="~/plugins/inputmask/jquery.inputmask.min.js"></script>
+	<script type="text/javascript">
+		$('#btnChgPass').on('click', function() {
+			const password = $("#txtPass").val();
+			const confirmPassword = $("#txtRPass").val();
+			if (!isPasswordStrong(password)) {
+				$("#ptext").html("ERROR: Password is not strong enough.");
+				$(".alert-dismissible").show().delay(3000).fadeOut();
+				return;
+			}
+			if (password === confirmPassword && password.trim()) {
+				$.post("/home/ChangePass", {
+					pass: password,
+					rpass: confirmPassword
+				}).done(() => {
+					$('#dgChangePass').modal('hide');
+					$(".alert-dismissible").hide();
+				});
+			} else {
+				$("#ptext").html("ERROR: Your password and confirmation password do not match.");
+				$(".alert-dismissible").show().delay(3000).fadeOut();
+			}
+		});
+		if (localStorage.getItem('sidebar-collapsed') === 'true') {
+			$('body').addClass('sidebar-collapse');
+		}
+		$(document).ready(function() {
+			// Detect when the sidebar toggle is clicked
+			$('.sidebar-toggle').on('click', function() {
+				if ($('body').hasClass('sidebar-collapse')) {
+					localStorage.setItem('sidebar-collapsed', 'false');
+				} else {
+					localStorage.setItem('sidebar-collapsed', 'true');
+				}
+			});
+			$('.select2').select2();
+			$(":input").inputmask();
+		});
+	</script>
+</body>
+</html>

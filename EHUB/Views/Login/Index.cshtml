@@ -1,0 +1,53 @@
+﻿@{
+    ViewData["Title"] = "Login";
+    Layout = "_LoginLayout";
+}
+<div class="login-box">
+    <div class="card card-outline card-primary">
+        <div class="card-header text-center">
+            <img src="~/dist/img/eqhub.png" style="width:50%;" />
+        </div>
+        <div class="card-body">
+            <p class="login-box-msg">Sign in to start your session</p>
+            <form asp-action="Login" asp-controller="Login" method="post">
+                <div class="input-group mb-3">
+                    <input type="email" class="form-control" name="email" placeholder="Email" required>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-envelope"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <input type="password" class="form-control" name="pass" placeholder="Password" required>
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <span class="fas fa-lock"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <div class="icheck-primary">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">
+                                Remember Me
+                            </label>
+                        </div>
+                    </div>
+                    <!-- /.col -->
+                    <div class="col-4">
+                        <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+                    </div>
+                    <!-- /.col -->
+                </div>
+            </form>
+            <p class="mb-1" style="color: red;font-size: small;">
+                @TempData["msg"]
+            </p>
+            <p class="mb-1">
+                <a href="#" data-toggle="modal" data-target="#modal-default"><i class="fa fa-unlock-alt"></i>&nbsp;I forgot my password</a>
+            </p>
+        </div>
+    </div>
+</div>
